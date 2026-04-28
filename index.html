@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Physician Assist — CDI Co-Pilot</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --color-bg: #f8f7f4;
+    --color-surface: #ffffff;
+    --color-surface-2: #f2f1ee;
+    --color-border: rgba(0,0,0,0.1);
+    --color-border-strong: rgba(0,0,0,0.18);
+    --color-text: #1a1a18;
+    --color-text-muted: #6b6b67;
+    --color-text-hint: #9e9e99;
+    --color-green: #1D9E75;
+    --color-green-light: #E1F5EE;
+    --color-green-text: #0F6E56;
+    --color-red: #E24B4A;
+    --color-red-light: #FCEBEB;
+    --color-red-text: #A32D2D;
+    --color-amber: #EF9F27;
+    --color-amber-light: #FAEEDA;
+    --color-amber-text: #854F0B;
+    --color-blue: #378ADD;
+    --color-blue-light: #E6F1FB;
+    --color-blue-text: #185FA5;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-bg: #1a1a18;
+      --color-surface: #242422;
+      --color-surface-2: #2e2e2b;
+      --color-border: rgba(255,255,255,0.1);
+      --color-border-strong: rgba(255,255,255,0.18);
+      --color-text: #f0efe9;
+      --color-text-muted: #9e9e99;
+      --color-text-hint: #6b6b67;
+      --color-green-light: #0a2e22;
+      --color-green-text: #5DCAA5;
+      --color-red-light: #2e1414;
+      --color-red-text: #F09595;
+      --color-amber-light: #2e1f06;
+      --color-amber-text: #FAC775;
+      --color-blue-light: #0c2240;
+      --color-blue-text: #85B7EB;
+    }
+  }
+
+  body {
+    font-family: -apple-system, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+    background: var(--color-bg);
+    color: var(--color-text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Header */
+  .header {
+    background: var(--color-surface);
+    border-bottom: 0.5px solid var(--color-border);
+    padding: 0 24px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .logo-mark {
+    width: 30px; height: 30px;
+    background: var(--color-green);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .logo-mark svg { width: 16px; height: 16px; }
+  .logo-name { font-size: 15px; font-weight: 600; color: var(--color-text); }
+  .logo-divider { width: 1px; height: 16px; background: var(--color-border-strong); margin: 0 2px; }
+  .logo-product { font-size: 13px; color: var(--color-text-muted); }
+
+  .header-right { display: flex; align-items: center; gap: 10px; }
+  .badge-hipaa {
+    font-size: 11px; font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: var(--color-amber-light);
+    color: var(--color-amber-text);
+    border: 0.5px solid var(--color-amber);
+  }
+  .badge-status {
+    font-size: 11px; font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: var(--color-green-light);
+    color: var(--color-green-text);
+  }
+
+  /* API Key Banner */
+  .api-banner {
+    background: var(--color-blue-light);
+    border-bottom: 0.5px solid var(--color-blue);
+    padding: 10px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+    color: var(--color-blue-text);
+  }
+  .api-banner input {
+    flex: 1;
+    max-width: 360px;
+    font-size: 13px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    border: 0.5px solid var(--color-border-strong);
+    background: var(--color-surface);
+    color: var(--color-text);
+    outline: none;
+  }
+  .api-banner input:focus { border-color: var(--color-blue); }
+  .btn-save-key {
+    font-size: 12px; font-weight: 500;
+    padding: 6px 14px;
+    border-radius: var(--radius-sm);
+    background: var(--color-blue);
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+  .api-banner.hidden { display: none; }
+
+  /* PHI Warning */
+  .phi-warning {
+    background: var(--color-amber-light);
+    border-bottom: 0.5px solid var(--color-amber);
+    padding: 8px 24px;
+    font-size: 12px;
+    color: var(--color-amber-text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .phi-warning strong { font-weight: 600; }
+
+  /* Main layout */
+  .main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 24px;
+    gap: 20px;
+  }
+
+  @media (max-width: 768px) {
+    .main { grid-template-columns: 1fr; padding: 16px; }
+  }
+
+  /* Panels */
+  .panel {
+    background: var(--color-surface);
+    border: 0.5px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .panel-header {
+    padding: 14px 18px 12px;
+    border-bottom: 0.5px solid var(--color-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .panel-title {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+
+  .panel-body { padding: 16px 18px; flex: 1; }
+
+  /* Input area */
+  .specialty-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .specialty-label { font-size: 12px; color: var(--color-text-muted); }
+  select {
+    font-size: 13px;
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    border: 0.5px solid var(--color-border-strong);
+    background: var(--color-surface-2);
+    color: var(--color-text);
+    cursor: pointer;
+    outline: none;
+  }
+  select:focus { border-color: var(--color-green); }
+
+  textarea {
+    width: 100%;
+    min-height: 340px;
+    font-size: 13px;
+    font-family: -apple-system, 'SF Pro Text', sans-serif;
+    line-height: 1.65;
+    color: var(--color-text);
+    background: var(--color-surface-2);
+    border: 0.5px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  textarea:focus { border-color: var(--color-green); }
+  textarea::placeholder { color: var(--color-text-hint); }
+
+  .action-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    align-items: center;
+  }
+
+  .btn-primary {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: var(--color-green);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    padding: 9px 20px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  .btn-primary:hover { opacity: 0.88; }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--color-text-muted);
+    border: 0.5px solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    padding: 9px 16px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-secondary:hover { background: var(--color-surface-2); }
+
+  .char-count {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--color-text-hint);
+  }
+
+  /* Results */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+    gap: 10px;
+    color: var(--color-text-hint);
+    text-align: center;
+  }
+  .empty-icon {
+    width: 48px; height: 48px;
+    opacity: 0.25;
+  }
+  .empty-title { font-size: 14px; font-weight: 500; }
+  .empty-sub { font-size: 12px; line-height: 1.5; max-width: 200px; }
+
+  .loading-state {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+    gap: 14px;
+  }
+  .spinner {
+    width: 28px; height: 28px;
+    border: 2px solid var(--color-border-strong);
+    border-top-color: var(--color-green);
+    border-radius: 50%;
+    animation: spin 0.75s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-size: 13px; color: var(--color-text-muted); }
+  .loading-sub { font-size: 11px; color: var(--color-text-hint); }
+
+  /* Flag cards */
+  .flags-container { display: flex; flex-direction: column; gap: 10px; }
+
+  .flag-card {
+    background: var(--color-surface);
+    border: 0.5px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    border-left: 3px solid var(--color-red);
+    animation: fadeIn 0.25s ease forwards;
+    opacity: 0;
+  }
+  .flag-card.warning { border-left-color: var(--color-amber); }
+  .flag-card.suggestion { border-left-color: var(--color-green); }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .flag-card:nth-child(1) { animation-delay: 0.05s; }
+  .flag-card:nth-child(2) { animation-delay: 0.1s; }
+  .flag-card:nth-child(3) { animation-delay: 0.15s; }
+  .flag-card:nth-child(4) { animation-delay: 0.2s; }
+  .flag-card:nth-child(5) { animation-delay: 0.25s; }
+
+  .flag-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 7px;
+  }
+
+  .flag-badge {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+  .flag-badge.critical { background: var(--color-red-light); color: var(--color-red-text); }
+  .flag-badge.warning { background: var(--color-amber-light); color: var(--color-amber-text); }
+  .flag-badge.suggestion { background: var(--color-green-light); color: var(--color-green-text); }
+
+  .flag-drg {
+    font-size: 10px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: var(--color-surface-2);
+    color: var(--color-text-muted);
+    margin-left: auto;
+  }
+
+  .flag-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text);
+    margin-bottom: 5px;
+    line-height: 1.4;
+  }
+
+  .flag-body {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    line-height: 1.55;
+  }
+
+  .icd-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 10px;
+  }
+
+  .icd-chip {
+    font-size: 11px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    padding: 3px 9px;
+    border-radius: 5px;
+    border: 0.5px solid var(--color-border-strong);
+    background: var(--color-surface-2);
+    color: var(--color-text-muted);
+  }
+  .icd-chip.suggested {
+    background: var(--color-green-light);
+    color: var(--color-green-text);
+    border-color: #9FE1CB;
+  }
+
+  /* Summary bar */
+  .summary-bar {
+    display: none;
+    grid-template-columns: repeat(3, 1fr);
+    border-top: 0.5px solid var(--color-border);
+    background: var(--color-surface-2);
+  }
+
+  .metric {
+    padding: 14px 18px;
+    text-align: center;
+    border-right: 0.5px solid var(--color-border);
+  }
+  .metric:last-child { border-right: none; }
+  .metric-val {
+    font-size: 22px;
+    font-weight: 600;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .metric-val.red { color: var(--color-red); }
+  .metric-val.amber { color: var(--color-amber); }
+  .metric-val.green { color: var(--color-green); }
+  .metric-label { font-size: 11px; color: var(--color-text-muted); }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    padding: 16px;
+    font-size: 11px;
+    color: var(--color-text-hint);
+    border-top: 0.5px solid var(--color-border);
+  }
+  .footer strong { color: var(--color-amber-text); }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="logo">
+    <div class="logo-mark">
+      <svg viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="2" stroke-linecap="round">
+        <circle cx="8" cy="8" r="5"/>
+        <path d="M8 5.5v2.5l1.5 1.5"/>
+      </svg>
+    </div>
+    <span class="logo-name">Physician Assist</span>
+    <div class="logo-divider"></div>
+    <span class="logo-product">CDI Co-Pilot</span>
+  </div>
+  <div class="header-right">
+    <span class="badge-hipaa">⚠ Demo — No real PHI</span>
+    <span class="badge-status" id="statusBadge">AI Ready</span>
+  </div>
+</header>
+
+<div class="api-banner" id="apiBanner">
+  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5 7V5a3 3 0 016 0v2"/></svg>
+  <span>Enter your Anthropic API key to activate:</span>
+  <input type="password" id="apiKeyInput" placeholder="sk-ant-..." autocomplete="off" />
+  <button class="btn-save-key" onclick="saveKey()">Save key</button>
+</div>
+
+<div class="phi-warning">
+  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2L1.5 13h13L8 2z"/><path d="M8 7v3M8 11.5v.5"/></svg>
+  <span><strong>Demo use only.</strong> Do not enter real patient names, MRNs, dates of birth, or any identifying information. Use synthetic or de-identified data only.</span>
+</div>
+
+<main class="main">
+  <!-- Left panel: input -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">Clinical note / encounter summary</span>
+    </div>
+    <div class="panel-body">
+      <div class="specialty-row">
+        <span class="specialty-label">Specialty:</span>
+        <select id="specialtySelect">
+          <option>Hospitalist</option>
+          <option>ENT</option>
+          <option>Orthopedics</option>
+          <option>OB/GYN</option>
+          <option>Oncology</option>
+          <option>Cardiology</option>
+          <option>Emergency Medicine</option>
+          <option>Pulmonology</option>
+        </select>
+      </div>
+      <textarea
+        id="noteInput"
+        placeholder="Paste a de-identified clinical note or encounter summary here...
+
+Example: 46M with h/o CHF (EF 20-25%) presenting with dyspnea and anasarca. BNP 1030. Echo shows severely depressed LV systolic function. Patient on supplemental O2. Positive blood cultures for gram-negative rods. Hypokalemia and hypomagnesemia noted. Hypoalbuminemia. Methamphetamine positive on urine drug screen."
+        oninput="updateCharCount()"
+      ></textarea>
+      <div class="action-row">
+        <button class="btn-primary" id="analyzeBtn" onclick="analyze()">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 8h2l2-5 3 10 2-5h3"/></svg>
+          Analyze note
+        </button>
+        <button class="btn-secondary" onclick="loadExample()">Load example</button>
+        <button class="btn-secondary" onclick="clearAll()">Clear</button>
+        <span class="char-count" id="charCount">0 chars</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right panel: results -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">CDI flags &amp; ICD-10 suggestions</span>
+      <span id="flagCount" style="font-size:12px;color:var(--color-text-muted);"></span>
+    </div>
+    <div class="panel-body" id="resultsBody">
+      <div class="empty-state" id="emptyState">
+        <svg class="empty-icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="8" y="6" width="32" height="36" rx="4"/>
+          <line x1="16" y1="16" x2="32" y2="16"/>
+          <line x1="16" y1="22" x2="32" y2="22"/>
+          <line x1="16" y1="28" x2="26" y2="28"/>
+          <circle cx="34" cy="34" r="6"/>
+          <path d="M31 34h6M34 31v6"/>
+        </svg>
+        <div class="empty-title">No note analyzed yet</div>
+        <div class="empty-sub">Paste a de-identified note and click Analyze note to surface CDI gaps</div>
+      </div>
+
+      <div class="loading-state" id="loadingState">
+        <div class="spinner"></div>
+        <div class="loading-text">Scanning for documentation gaps...</div>
+        <div class="loading-sub">Checking diagnosis specificity, secondary conditions, DRG impact</div>
+      </div>
+
+      <div class="flags-container" id="flagsContainer"></div>
+    </div>
+    <div class="summary-bar" id="summaryBar">
+      <div class="metric"><div class="metric-val red" id="critCount">0</div><div class="metric-label">Critical gaps</div></div>
+      <div class="metric"><div class="metric-val amber" id="warnCount">0</div><div class="metric-label">Specificity warnings</div></div>
+      <div class="metric"><div class="metric-val green" id="suggCount">0</div><div class="metric-label">Suggestions</div></div>
+    </div>
+  </div>
+</main>
+
+<footer class="footer">
+  Physician Assist CDI Co-Pilot &nbsp;·&nbsp; <strong>Demo only — no real PHI</strong> &nbsp;·&nbsp; Not for clinical decision making
+</footer>
+
+<script>
+const EXAMPLE_NOTE = `46M with history of CHF with severely reduced EF (20-25% on echo 1/9/2026), presenting with dyspnea and anasarca. BNP 1030 on admission. Patient also has history of CAD and HTN, currently on metoprolol XL.
+
+Patient placed on supplemental O2 on admission for hypoxia. VBG on 4/26 shows VpH 7.44, VpO2 42.0, VpCO2 41.4.
+
+LFTs on admission: ALT 19, AST 23, ALP 178, total bili 2.5. History of hepatic encephalopathy. Ammonia 28 on 4/25.
+
+Labs: K 3.4 on admission, Mag 1.8 on 4/27. Albumin 2.9 on admission. HGB 9.4, HCT 30.6 on admission.
+
+Urine drug screen positive for methamphetamine.
+
+Assessment: CHF exacerbation, hypokalemia, anemia.
+Plan: IV Lasix BID, resume GDMT, strict I/O, daily weights, monitor electrolytes, case management consult.`;
+
+let apiKey = localStorage.getItem('pa_api_key') || '';
+
+function init() {
+  if (apiKey) {
+    document.getElementById('apiBanner').classList.add('hidden');
+    document.getElementById('apiKeyInput').value = apiKey;
+  }
+}
+
+function saveKey() {
+  const val = document.getElementById('apiKeyInput').value.trim();
+  if (!val.startsWith('sk-')) {
+    alert('Please enter a valid Anthropic API key starting with sk-');
+    return;
+  }
+  apiKey = val;
+  localStorage.setItem('pa_api_key', val);
+  document.getElementById('apiBanner').classList.add('hidden');
+}
+
+function updateCharCount() {
+  const len = document.getElementById('noteInput').value.length;
+  document.getElementById('charCount').textContent = len.toLocaleString() + ' chars';
+}
+
+function loadExample() {
+  document.getElementById('noteInput').value = EXAMPLE_NOTE;
+  updateCharCount();
+}
+
+function clearAll() {
+  document.getElementById('noteInput').value = '';
+  document.getElementById('flagsContainer').innerHTML = '';
+  document.getElementById('emptyState').style.display = 'flex';
+  document.getElementById('summaryBar').style.display = 'none';
+  document.getElementById('flagCount').textContent = '';
+  updateCharCount();
+}
+
+async function analyze() {
+  if (!apiKey) {
+    document.getElementById('apiBanner').classList.remove('hidden');
+    document.getElementById('apiKeyInput').focus();
+    return;
+  }
+  const note = document.getElementById('noteInput').value.trim();
+  if (!note) { alert('Please paste a clinical note first.'); return; }
+
+  const specialty = document.getElementById('specialtySelect').value;
+
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('loadingState').style.display = 'flex';
+  document.getElementById('flagsContainer').innerHTML = '';
+  document.getElementById('summaryBar').style.display = 'none';
+  document.getElementById('flagCount').textContent = '';
+  document.getElementById('analyzeBtn').disabled = true;
+  document.getElementById('statusBadge').textContent = 'Analyzing...';
+
+  const system = `You are a senior Clinical Documentation Improvement (CDI) specialist and expert ICD-10-CM/PCS coder with deep knowledge of MS-DRG optimization and CC/MCC capture.
+
+Analyze the clinical note for documentation gaps that impact reimbursement, DRG weight, and quality metrics. Identify:
+1. Missing diagnoses supported by clinical evidence but not documented
+2. Diagnoses needing more specificity (wrong ICD-10 level of detail)
+3. Missing secondary conditions, complications, or comorbidities that qualify as CC or MCC
+4. Linkage opportunities (e.g., hypertensive heart disease combining HTN + HF)
+5. Severity qualifiers missing (e.g., sepsis without organism or severity classification)
+
+For each flag assess DRG impact: "MCC", "CC", "Higher DRG weight", or "Additional CC".
+
+Respond ONLY with a valid JSON array. No markdown, no preamble, no explanation outside JSON.
+
+Each object must have exactly these fields:
+- type: "critical" | "warning" | "suggestion"
+- title: string, max 10 words
+- body: string, 1-2 sentences explaining the gap and its clinical/coding rationale
+- drgImpact: string, e.g. "Adds MCC" or "Higher DRG weight" or null
+- currentCode: string or null (current ICD-10 code if applicable)
+- suggestedCodes: array of {code: string, description: string}
+
+Return maximum 6 flags. Prioritize by revenue impact.`;
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1500,
+        system,
+        messages: [{ role: 'user', content: `Specialty: ${specialty}\n\nClinical Note:\n${note}` }]
+      })
+    });
+
+    if (!resp.ok) {
+      const err = await resp.json();
+      throw new Error(err.error?.message || 'API error');
+    }
+
+    const data = await resp.json();
+    const raw = data.content?.[0]?.text || '[]';
+    const clean = raw.replace(/```json|```/g, '').trim();
+    const flags = JSON.parse(clean);
+    renderFlags(flags);
+
+  } catch(e) {
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('emptyState').style.display = 'flex';
+    document.getElementById('flagsContainer').innerHTML = `<div style="font-size:13px;color:var(--color-red);padding:12px 0;">${e.message || 'Analysis failed. Check your API key and try again.'}</div>`;
+  } finally {
+    document.getElementById('analyzeBtn').disabled = false;
+    document.getElementById('statusBadge').textContent = 'AI Ready';
+    document.getElementById('loadingState').style.display = 'none';
+  }
+}
+
+function renderFlags(flags) {
+  const container = document.getElementById('flagsContainer');
+  container.innerHTML = '';
+  let crit = 0, warn = 0, sugg = 0;
+
+  flags.forEach((f, i) => {
+    const card = document.createElement('div');
+    const typeClass = f.type === 'critical' ? '' : f.type === 'warning' ? 'warning' : 'suggestion';
+    card.className = `flag-card ${typeClass}`;
+    card.style.animationDelay = (i * 0.06) + 's';
+
+    const badgeClass = f.type === 'critical' ? 'critical' : f.type === 'warning' ? 'warning' : 'suggestion';
+    const badgeLabel = f.type === 'critical' ? 'Critical gap' : f.type === 'warning' ? 'Specificity' : 'Suggestion';
+
+    let icdHtml = '';
+    if (f.currentCode) {
+      icdHtml += `<span class="icd-chip">${f.currentCode}</span>`;
+    }
+    if (f.suggestedCodes?.length) {
+      f.suggestedCodes.forEach(s => {
+        icdHtml += `<span class="icd-chip suggested">${s.code} — ${s.description}</span>`;
+      });
+    }
+
+    card.innerHTML = `
+      <div class="flag-top">
+        <span class="flag-badge ${badgeClass}">${badgeLabel}</span>
+        ${f.drgImpact ? `<span class="flag-drg">${f.drgImpact}</span>` : ''}
+      </div>
+      <div class="flag-title">${f.title}</div>
+      <div class="flag-body">${f.body}</div>
+      ${icdHtml ? `<div class="icd-row">${icdHtml}</div>` : ''}
+    `;
+    container.appendChild(card);
+
+    if (f.type === 'critical') crit++;
+    else if (f.type === 'warning') warn++;
+    else sugg++;
+  });
+
+  document.getElementById('critCount').textContent = crit;
+  document.getElementById('warnCount').textContent = warn;
+  document.getElementById('suggCount').textContent = sugg;
+  document.getElementById('summaryBar').style.display = 'grid';
+  document.getElementById('flagCount').textContent = flags.length + ' flags';
+}
+
+init();
+</script>
+</body>
+</html>
