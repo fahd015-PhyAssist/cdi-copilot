@@ -558,18 +558,531 @@ Example: 46M with h/o CHF (EF 20-25%) presenting with dyspnea and anasarca. BNP 
 </footer>
 
 <script>
-const EXAMPLE_NOTE = `46M with history of CHF with severely reduced EF (20-25% on echo 1/9/2026), presenting with dyspnea and anasarca. BNP 1030 on admission. Patient also has history of CAD and HTN, currently on metoprolol XL.
+const SPECIALTY_EXAMPLES = {
+  'Hospitalist': `46M with history of CHF with severely reduced EF (20-25% on echo 1/9/2026), presenting with dyspnea and anasarca. BNP 1030 on admission. Patient also has history of CAD and HTN, currently on metoprolol XL.
 
 Patient placed on supplemental O2 on admission for hypoxia. VBG on 4/26 shows VpH 7.44, VpO2 42.0, VpCO2 41.4.
 
 LFTs on admission: ALT 19, AST 23, ALP 178, total bili 2.5. History of hepatic encephalopathy. Ammonia 28 on 4/25.
 
 Labs: K 3.4 on admission, Mag 1.8 on 4/27. Albumin 2.9 on admission. HGB 9.4, HCT 30.6 on admission.
-
 Urine drug screen positive for methamphetamine.
 
 Assessment: CHF exacerbation, hypokalemia, anemia.
-Plan: IV Lasix BID, resume GDMT, strict I/O, daily weights, monitor electrolytes, case management consult.`;
+Plan: IV Lasix BID, resume GDMT, strict I/O, daily weights, monitor electrolytes, case management consult.`,
+
+  'Orthopedics': `62F presenting for follow-up after right total knee arthroplasty performed 6 weeks ago. Patient reports significant improvement in pain and mobility. Incision well-healed, no signs of infection.
+
+ROM: flexion to 105 degrees, extension to -5 degrees. Mild effusion present. Neurovascularly intact distally.
+
+Patient has history of obesity (BMI 38), type 2 diabetes (last HbA1c 8.2%), and hypertension. Post-op course complicated by wound drainage on day 3, resolved with dressing changes.
+
+PT reports patient is ambulating with cane, doing well with home exercise program. Patient reports some anterior knee pain with stair climbing.
+
+Assessment: Status post right TKA, recovering well.
+Plan: Continue PT, follow up in 6 weeks, weight bearing as tolerated.`,
+
+  'ENT': `54M presenting with 6-month history of progressive hoarseness and dysphagia to solids. 40 pack-year smoking history, active smoker. Social alcohol use.
+
+Flexible laryngoscopy performed in office today: irregular lesion noted on right true vocal cord, approximately 1.2cm, with impaired mobility. Left cord normal. No obvious supraglottic extension visualized. Neck exam: no palpable lymphadenopathy.
+
+CT neck with contrast ordered. Patient referred for direct laryngoscopy and biopsy under general anesthesia.
+
+Patient also reports chronic sinusitis, on fluticasone nasal spray. Sleep study 2 years ago showed mild OSA, not on CPAP.
+
+Assessment: Right vocal cord lesion, suspicious for malignancy. Chronic sinusitis. OSA.
+Plan: CT neck, OR scheduling for DL and biopsy, smoking cessation counseling.`,
+
+  'OB/GYN': `28F G2P1 at 34+2 weeks gestation presenting with elevated BP readings at home. BP in office 158/102. Repeat BP 162/98 after 15 min rest. Headache present, no visual changes. No epigastric pain.
+
+Labs: platelet count 142k, creatinine 0.9, AST 38, ALT 42, urine protein/creatinine ratio 0.38. 24hr urine protein 380mg.
+
+Fetal heart tones 148, reactive NST. BPP 8/8. Fetal growth by ultrasound: estimated fetal weight 2.1kg, 32nd percentile.
+
+GBS status unknown. Group B strep culture sent today. Patient has history of gestational hypertension in prior pregnancy.
+
+Assessment: Preeclampsia without severe features. Fetal growth restriction.
+Plan: Admit for monitoring, betamethasone course, low dose aspirin, serial growth ultrasounds.`,
+
+  'Oncology': `67M with metastatic non-small cell lung cancer presenting for cycle 4 of carboplatin/pemetrexed. Diagnosed 8 months ago, adenocarcinoma, EGFR wild type, PD-L1 50%.
+
+CT chest from last week shows partial response — primary lesion decreased from 4.2cm to 2.8cm, stable mediastinal lymphadenopathy, no new metastases. Brain MRI negative.
+
+Current issues: grade 2 fatigue, grade 1 peripheral neuropathy in bilateral feet, mild nausea controlled with ondansetron. Weight down 4kg since diagnosis. Hemoglobin 9.8 today.
+
+Patient also has COPD (on tiotropium), type 2 diabetes, and hypertension. Performance status ECOG 1.
+
+Assessment: Metastatic NSCLC responding to chemotherapy. Chemotherapy-induced anemia. Peripheral neuropathy.
+Plan: Proceed with cycle 4, dose reduce pemetrexed 25% for neuropathy, CBC recheck in 1 week.`,
+
+  'Cardiology': `71M presenting for follow-up after recent hospitalization for acute decompensated heart failure. Echo during admission showed EF 30%, moderate mitral regurgitation, diastolic dysfunction grade 3, moderate pulmonary hypertension (RVSP 52mmHg).
+
+Current medications: carvedilol 12.5mg BID, lisinopril 10mg daily, furosemide 40mg daily, spironolactone 25mg daily. Denies chest pain. Reports mild exertional dyspnea with 1 flight of stairs, NYHA class II-III.
+
+Vitals: BP 118/72, HR 68, SpO2 96% on room air. Weight up 2kg from last visit. JVD present at 45 degrees. Bilateral ankle edema 1+.
+
+Labs: BNP 680, creatinine 1.4 (baseline 1.2), K 4.1, Na 138.
+
+History of atrial fibrillation, on apixaban. Diabetes type 2, HbA1c 7.8%.
+
+Assessment: Chronic systolic heart failure, compensated. Atrial fibrillation.
+Plan: Increase furosemide to 60mg daily, recheck labs in 1 week, consider uptitration of carvedilol.`,
+
+  'Emergency Medicine': `45M brought in by EMS after witnessed syncopal episode at work. No prodrome reported by coworkers. Regained consciousness within 2 minutes. Denies chest pain or palpitations prior to event. One prior syncopal episode 6 months ago, not worked up.
+
+PMH: hypertension, type 2 diabetes, obesity BMI 42. Medications: metformin, lisinopril, amlodipine.
+
+Exam: BP 142/88, HR 92 regular, SpO2 98% RA, RR 16, temp 98.4. No focal neuro deficits. No tongue biting or incontinence reported.
+
+ECG: sinus rhythm, PR interval 0.22sec, QTc 478ms, no ST changes. Troponin I at 0 and 3 hours both undetectable. BMP: glucose 188, creatinine 1.1, K 3.8. CBC normal. Head CT non-contrast negative.
+
+Assessment: Syncope, etiology unclear.
+Plan: Admit for telemetry monitoring, cardiology consult, echocardiogram, orthostatic vitals.`,
+
+  'Pulmonology': `58F with 35 pack-year smoking history referred for evaluation of progressive dyspnea on exertion over 18 months. Now limited to walking one block. Chronic productive cough, worse in mornings.
+
+PFTs today: FEV1 48% predicted, FVC 78% predicted, FEV1/FVC ratio 0.54. Post-bronchodilator FEV1 improvement 8%. DLCO 52% predicted.
+
+6MWT: 280 meters, SpO2 drop from 96% to 88% on exertion. CT chest: emphysematous changes bilateral upper lobes, no mass lesion, no consolidation.
+
+Current medications: albuterol PRN only. Never on ICS or LABA. ABG on room air: pH 7.38, PaCO2 48, PaO2 62, HCO3 28.
+
+History of GERD, hypertension. BMI 26. No occupational exposures. No family history of lung disease. Alpha-1 antitrypsin level pending.
+
+Assessment: COPD, severe. Hypoxemia on exertion.
+Plan: Start tiotropium, add ICS/LABA, pulmonary rehab referral, supplemental O2 for exertion, follow up alpha-1 level.`
+};
+
+const SPECIALTY_CDI_RULES = {
+  'Hospitalist': `HOSPITALIST CDI RULES — GROUNDED IN FY2026 ICD-10-CM OFFICIAL GUIDELINES:
+
+SEPSIS (Guidelines I.C.1.d):
+- Always assign code for the underlying systemic infection first — if organism unknown use A41.9
+- "Urosepsis" is NOT synonymous with sepsis — query provider for clarification
+- Severe sepsis (R65.2x) requires minimum 2 codes: underlying infection + R65.2 subcategory + organ dysfunction codes
+- Septic shock (R65.21) can NEVER be principal diagnosis — underlying infection is sequenced first
+- Negative blood cultures do NOT preclude sepsis diagnosis if clinical evidence present — query provider
+- If patient has sepsis AND acute organ dysfunction, document whether organ dysfunction is related to sepsis or another condition
+- Postprocedural sepsis: sequence T81.44 (sepsis following procedure) with the infection site code first
+- Bacteremia: always document organism and source — do NOT leave as unspecified
+
+HYPERTENSION + HEART FAILURE (Guidelines I.C.9.a):
+- ICD-10-CM PRESUMES causal relationship between HTN and heart disease — code as I11.0 (hypertensive heart disease with HF), NOT separately as I10 + I50
+- MANDATORY: add I50.x code to specify type of heart failure (systolic vs diastolic, acute vs chronic vs acute-on-chronic)
+- If HTN + HF + CKD all present: use I13.x combination code, NOT I11 + I12
+- Pulmonary hypertension (I27.x): document secondary cause (COPD, LV disease, sleep apnea) and code associated condition
+
+HEART FAILURE SPECIFICITY (I50.x):
+- Always document EF: HFrEF (EF<40%) = I50.2x, HFmrEF (40-49%) = I50.8x, HFpEF (EF≥50%) = I50.3x
+- Always specify acuity: acute (I50.x1), chronic (I50.x2), acute-on-chronic (I50.x3)
+- Volume overload as separate diagnosis when present
+
+RESPIRATORY FAILURE (Guidelines I.C.10.b):
+- Hypoxia + supplemental O2 = document Acute Respiratory Failure with Hypoxia J96.01 (MCC) — do NOT just code hypoxia
+- Respiratory failure may be principal OR secondary diagnosis depending on circumstances of admission
+- COPD + acute exacerbation: always specify with exacerbation (J44.1) vs stable (J44.0)
+- Ventilator-associated pneumonia: only code J95.851 if provider explicitly documents VAP — also assign organism code
+
+MALNUTRITION + HYPOALBUMINEMIA:
+- Hypoalbuminemia in setting of CHF/chronic illness = protein-calorie malnutrition (E44.x or E43) — adds CC/MCC
+- Distinguish: malnutrition (E40-E46) vs other nutritional deficiencies
+- Low albumin is often inflammation marker in acute illness — document clinical context
+
+ELECTROLYTES: Document each abnormality separately with active treatment status:
+- Hypokalemia (E87.6), Hypomagnesemia (E83.42), Hyponatremia (E87.1) — each is a separate billable CC
+- State that each is being actively treated and whether refractory to supplementation
+
+ENCEPHALOPATHY: Specify type — Hepatic (K72.x), Metabolic (G93.41), Septic (G93.41), Toxic (G92.x) — each has different DRG impact
+
+ANEMIA: Never leave as generic — specify:
+- Anemia of chronic disease (D63.8), Iron deficiency (D50.x), Acute blood loss (D62), Malignancy-associated (D63.0)
+
+SUBSTANCE USE (Guidelines I.C.5.b):
+- Positive drug screen = document substance use disorder, document withdrawal monitoring if applicable
+- Specify: abuse vs dependence vs use; specify substance
+
+GENERAL RULES APPLICABLE:
+- Acute AND chronic condition present: code both, sequence acute first (Guideline I.B.8)
+- Combination codes: use single combination code when it captures all elements — do not double-code (Guideline I.B.9)
+- Complications of care: must document cause-and-effect relationship; not all conditions during hospitalization are complications (Guideline I.B.16)
+- Signs/symptoms: do NOT code separately if integral to the confirmed diagnosis (Guideline I.B.5)`,
+
+  'Orthopedics': `ORTHOPEDICS CDI RULES — GROUNDED IN FY2026 ICD-10-CM OFFICIAL GUIDELINES:
+
+LATERALITY (Guidelines I.B.13 + I.C.13.a):
+- ICD-10-CM REQUIRES laterality on nearly all musculoskeletal codes — left, right, or bilateral
+- If bilateral condition exists: assign bilateral code; if treated separately in different encounters, reassign unilateral code after one side resolved
+- "Unspecified side" codes should be used ONLY when documentation is truly absent and clarification is impossible — flag every unspecified code
+- Laterality may be coded from ANY clinician's documentation (nurse, PT, technician) per Guideline I.B.14
+
+SITE SPECIFICITY (Guidelines I.C.13.a):
+- Bone vs joint distinction required: avascular necrosis codes to bone site, not joint
+- Multiple sites: code each site individually when documented; use "multiple sites" code ONLY when sites not specified
+
+ACUTE TRAUMATIC vs CHRONIC/RECURRENT (Guidelines I.C.13.b):
+- Current acute injury: code from Chapter 19 (S/T codes)
+- Healed injury or recurrent musculoskeletal condition: code from Chapter 13 (M codes)
+- When unclear, query provider — do not assume
+
+PATHOLOGIC FRACTURES (Guidelines I.C.13.c):
+- Always specify: displaced vs non-displaced, open vs closed
+- Pathologic fracture due to osteoporosis, neoplasm, or other disease: use M84.x codes with underlying condition coded first
+- 7th character required: A (initial), D (subsequent), G (delayed healing), K (nonunion), P (malunion), S (sequela)
+- Traumatic fracture: S/T codes with 7th character
+
+OSTEOPOROSIS (Guidelines I.C.13.d):
+- Osteoporosis WITH fracture: M80.x (pathological fracture in osteoporosis) — do NOT code separately
+- Osteoporosis WITHOUT fracture: M81.x
+- Age-related vs other osteoporosis must be distinguished
+
+POSTOPERATIVE COMPLICATIONS (Guidelines I.B.16):
+- Must document cause-and-effect relationship explicitly — not all post-op conditions are complications
+- Surgical site infection: T81.4x + organism code
+- Wound dehiscence: T81.3x
+- Postoperative neuropathy/nerve injury: document anatomical nerve, laterality, and causal link to surgery
+- DVT/PE post-op: document as complication vs incidental finding
+
+JOINT ARTHROPLASTY:
+- Primary vs revision: different codes and significantly different DRG weights
+- Document: total vs partial, cemented vs cementless, approach
+- Z96.6x status codes required on follow-up encounters
+- Periprosthetic fracture: M97.x — document implant type and laterality
+
+DIABETES + SURGICAL RISK:
+- Document diabetic complications affecting wound healing, infection risk — link explicitly per combination code rules
+- Uncontrolled vs controlled diabetes: different codes, document HbA1c level
+
+OBESITY:
+- BMI documented by ANY clinician (nurse, dietitian) is codeable per Guideline I.B.14
+- Morbid obesity (BMI ≥40): E66.01 — significant surgical risk modifier, documents medical necessity
+- Link obesity to surgical complexity in documentation
+
+PAIN (Guidelines I.C.6.b):
+- Acute vs chronic pain: code both when applicable, sequence by reason for encounter
+- Post-thoracotomy pain, post-op pain: G89.18/G89.28 — document as acute vs chronic
+- Cancer-related pain: G89.3 — code in addition to malignancy code`,
+
+  'ENT': `ENT CDI RULES — GROUNDED IN FY2026 ICD-10-CM OFFICIAL GUIDELINES:
+
+MALIGNANCY — PRIMARY SITE SPECIFICITY (Guidelines I.C.2):
+- Always determine: benign vs in-situ vs malignant vs uncertain behavior — different code categories
+- Primary malignancy: code to most specific anatomical site — true vocal cord (C32.0), supraglottis (C32.1), subglottis (C32.2) are separate codes
+- Overlapping lesion crossing site boundaries: use .8 subcategory code
+- Histological term takes precedence over neoplasm table: "squamous cell carcinoma" → reference histological term first
+
+MALIGNANCY — SECONDARY/METASTATIC (Guidelines I.C.2.b):
+- When admission is for treatment directed at metastatic/secondary site only: secondary neoplasm is principal diagnosis
+- Code BOTH primary (or Z85.x history code) AND secondary — never leave either uncoded
+- Lymph node metastasis: C77.x codes — specify regional vs distant
+
+MALIGNANCY — TREATMENT ENCOUNTERS (Guidelines I.C.2.e):
+- Chemo/radiation as primary reason for encounter: Z51.0/Z51.11/Z51.12 as principal diagnosis, malignancy as secondary
+- If surgical removal + adjunct chemo/radiation in same episode: neoplasm code is principal
+
+MALIGNANCY — COMPLICATIONS (Guidelines I.C.2.c):
+- Chemo-induced anemia: anemia code first + T45.1X5 adverse effect code + neoplasm code
+- Radiation-induced complications: complication code first + Y84.2 + neoplasm code
+- Dehydration due to malignancy: dehydration first + malignancy code
+
+PERSONAL HISTORY (Guidelines I.C.2.d):
+- Previously excised malignancy with NO residual: Z85.x (personal history) — do NOT continue coding active malignancy
+- Any extension, invasion, or metastasis at new site = secondary malignant neoplasm code (not history)
+
+LATERALITY — ENT SPECIFIC:
+- All ENT structures require laterality: ears, tonsils, vocal cords, sinuses, salivary glands
+- Bilateral conditions: code bilateral when both sides affected
+
+VOCAL CORD / LARYNX:
+- Vocal cord paralysis: J38.0x — specify unilateral vs bilateral, specify left/right
+- Vocal cord lesion: document whether benign (D14.1) vs malignant vs uncertain — do NOT leave as "lesion"
+- Hoarseness alone (R49.0) is insufficient if etiology established — code the cause
+
+SINUSITIS (J32.x):
+- Specify: maxillary (J32.0), frontal (J32.1), ethmoidal (J32.2), sphenoidal (J32.3), pansinusitis (J32.4)
+- Chronic vs acute vs acute-on-chronic — different codes
+- With nasal polyps: code polyps separately (J33.x)
+
+SLEEP APNEA:
+- Specify: obstructive (G47.33) vs central (G47.31) vs mixed (G47.32)
+- Document AHI severity when available
+- Link to obesity when present: obesity code + sleep apnea code
+- CPAP compliance/non-compliance: document for medical necessity
+
+DYSPHAGIA:
+- Specify: oropharyngeal (R13.11) vs esophageal (R13.14)
+- If neurogenic: link to underlying neurological condition
+- Document aspiration risk — aspiration pneumonia risk changes care complexity
+
+HEARING LOSS:
+- Specify: conductive (H90.0-H90.2), sensorineural (H90.3-H90.5), mixed (H90.6-H90.8)
+- Laterality required: unilateral vs bilateral
+- Restricted contralateral hearing: additional code required for unilateral loss
+
+GENERAL CODING RULES APPLICABLE:
+- Combination codes: use single combination code when it fully captures both conditions (Guideline I.B.9)
+- Sequela codes: residual conditions after acute phase — code residual first, then sequela code (Guideline I.B.10)
+- Signs/symptoms: do not code separately if integral to the established diagnosis (Guideline I.B.5)`,
+
+  'OB/GYN': `OB/GYN CDI RULES — GROUNDED IN FY2026 ICD-10-CM OFFICIAL GUIDELINES:
+
+GENERAL OB RULES (Guidelines I.C.15.a):
+- ALL obstetric codes (O codes) take precedence over non-obstetric codes for conditions complicating pregnancy
+- Final character identifies trimester: 1st (1-13 wks), 2nd (14-27 wks), 3rd (28+ wks), or delivery/postpartum
+- ALWAYS document exact weeks+days of gestation — affects code selection and DRG weight
+- Use Z34.x for routine prenatal supervision without complications
+
+PRINCIPAL DIAGNOSIS SELECTION (Guidelines I.C.15.b):
+- Principal diagnosis = condition chiefly responsible for the encounter
+- Delivery encounter: condition that prompted the delivery is principal, or O80 (normal delivery) if uncomplicated
+- Multiple conditions equally responsible: sequence based on circumstances
+
+PREEXISTING vs PREGNANCY-INDUCED CONDITIONS (Guidelines I.C.15.c):
+- Pre-existing conditions: use O codes that specify "pre-existing" or "complicating pregnancy"
+- Conditions arising during pregnancy: use O codes for pregnancy-induced conditions
+- Do NOT use non-obstetric codes when O codes exist that describe the complication in pregnancy
+
+HYPERTENSION IN PREGNANCY (Guidelines I.C.15.d):
+- Pre-existing HTN complicating pregnancy: O10.x (specify type — essential, secondary, etc.)
+- Gestational HTN: O13.x (without proteinuria)
+- Preeclampsia: O14.x — MUST specify with or without severe features (different DRG)
+  - Severe features: BP ≥160/110, thrombocytopenia, renal insufficiency, impaired liver function, pulmonary edema, new-onset headache
+- HELLP syndrome: O14.2x — separate code from preeclampsia
+
+DIABETES IN PREGNANCY (Guidelines I.C.15.g-i):
+- Pre-existing Type 1 DM in pregnancy: O24.01x
+- Pre-existing Type 2 DM in pregnancy: O24.11x
+- Gestational DM (GDM): O24.4x — specify diet-controlled (O24.410) vs insulin-controlled (O24.414) vs oral hypoglycemic (O24.415)
+- Long-term insulin use in GDM: also assign Z79.4
+
+SEPSIS IN PREGNANCY (Guidelines I.C.15.j-k):
+- Sepsis complicating OB: O75.3 (during labor) or O85 (puerperal sepsis) — do NOT use general sepsis codes alone
+- Puerperal sepsis: O85 as principal + organism code + severity code if severe sepsis
+
+FETAL CONDITIONS (Guidelines I.C.15.e):
+- Fetal conditions affecting maternal management: O35.x or O36.x codes
+- Fetal growth restriction: O36.59x — document severity and gestational age
+- Code only when fetal condition affects maternal management or requires documentation
+
+DELIVERY COMPLICATIONS:
+- Document ALL lacerations: 1st degree (O70.0), 2nd degree (O70.1), 3rd degree (O70.2x — specify type a/b/c), 4th degree (O70.3)
+- Postpartum hemorrhage: O72.x — specify timing (3rd stage, delayed, secondary) and whether due to retained placenta, uterine atony, etc.
+- Shoulder dystocia: O66.0 — document separately
+- Cord complications: O69.x — specify type
+
+ALCOHOL/TOBACCO/DRUGS IN PREGNANCY (Guidelines I.C.15.l):
+- Always code substance use complicating pregnancy — O99.31x (tobacco), O99.32x (alcohol), O99.32x (drugs)
+- Add F-code for substance use disorder and/or Z-code for exposure`,
+
+  'Oncology': `ONCOLOGY CDI RULES — GROUNDED IN FY2026 ICD-10-CM OFFICIAL GUIDELINES:
+
+PRIMARY vs SECONDARY MALIGNANCY (Guidelines I.C.2):
+- PRIMARY malignancy: original site of cancer — C codes by site
+- SECONDARY/METASTATIC malignancy: C77.x (lymph nodes), C78.x (respiratory/digestive), C79.x (other) — code BOTH primary and secondary
+- NEVER assume — document whether each site is primary vs metastatic
+- Previously excised primary with no residual: Z85.x (personal history) — do NOT keep coding active primary
+- Lymphoma/leukemia in remission vs active: different codes — document status explicitly
+
+TREATMENT ENCOUNTER SEQUENCING (Guidelines I.C.2.e):
+- Chemo/radiation as primary reason: Z51.0/Z51.11/Z51.12 as PRINCIPAL diagnosis, malignancy as secondary
+- Surgery + adjunct chemo/radiation same episode: neoplasm is principal
+- Admission for complication of treatment: complication code is principal (see below)
+
+CHEMOTHERAPY COMPLICATIONS (Guidelines I.C.2.c):
+- Chemo-induced anemia: anemia code FIRST (D64.81 if drug-induced) + T45.1X5A adverse effect + neoplasm code
+  - Do NOT sequence neoplasm first when encounter is for anemia management
+- Chemo-induced nausea/vomiting: T45.1X5A adverse effect + R11.2 + neoplasm
+- Chemo-induced neutropenia: D70.1 (drug-induced) + T45.1X5A + neoplasm
+- Chemo-induced neuropathy: G62.0 (drug-induced) + T45.1X5A
+- Radiation complications: complication code + Y84.2 + neoplasm code
+
+MALNUTRITION IN ONCOLOGY:
+- Weight loss >10% in cancer patient: document malnutrition — E44.x (moderate) or E43 (severe) — adds MCC
+- Cachexia: R64 — document separately as additional diagnosis
+- Hypoalbuminemia: document as protein-calorie malnutrition when clinically appropriate
+
+PAIN (Guidelines I.C.6.b):
+- Cancer-related pain: G89.3 — code in ADDITION to malignancy code, not instead of
+- Specify: neoplasm-related pain vs pain from treatment
+- Acute vs chronic: document both when applicable
+
+ANEMIA SPECIFICITY:
+- Anemia in neoplastic disease (not treatment-related): D63.0 + malignancy code
+- Chemo-induced anemia: D64.81 + T45.1X5A + malignancy
+- Blood loss anemia: D62 — specify source
+- Never leave as "anemia" — type affects sequencing and DRG
+
+DEHYDRATION (Guidelines I.C.2.c.3):
+- Dehydration due to malignancy (not treatment): dehydration first + malignancy code
+
+PERSONAL HISTORY vs ACTIVE:
+- Z85.x = truly excised/resolved — no further treatment, no evidence of disease
+- If ANY treatment ongoing or evidence of disease: code active malignancy, not history
+- Genetic susceptibility: Z15.0x — code for prophylactic management encounters
+
+FUNCTIONAL STATUS:
+- Document ECOG or Karnofsky performance status — supports medical necessity for treatments
+- Functional limitations affect care level documentation`,
+
+  'Cardiology': `CARDIOLOGY CDI RULES — GROUNDED IN FY2026 ICD-10-CM OFFICIAL GUIDELINES:
+
+HYPERTENSIVE HEART DISEASE (Guidelines I.C.9.a.1):
+- ICD-10-CM PRESUMES causal link between HTN and HF — code as I11.0 (hypertensive heart disease with HF)
+- MANDATORY: always add I50.x code to specify the TYPE of heart failure
+- Do NOT code I10 (HTN) + I50.x (HF) separately — this violates combination code rules
+- If HTN + HF + CKD: use I13.x combination category, add I50.x for HF type and N18.x for CKD stage
+
+HEART FAILURE SPECIFICITY (I50.x):
+- ALWAYS document EF: HFrEF (EF<40%) = I50.2x, HFmrEF (40-49%) = I50.8x, HFpEF (≥50%) = I50.3x
+- ALWAYS specify acuity: acute (I50.x1), chronic (I50.x2), acute-on-chronic (I50.x3)
+- Biventricular failure: document both right and left if present
+- Fluid overload (E87.70): code as additional diagnosis when present with HF
+
+PULMONARY HYPERTENSION (Guidelines I.C.9.a.11):
+- Secondary pulmonary hypertension (I27.1, I27.2x): code ALSO any associated conditions or adverse effects
+- Sequencing: based on reason for encounter
+- Specify group: primary (I27.0), secondary (I27.1), chronic thromboembolic (I27.24), other specified (I27.29)
+
+CORONARY ARTERY DISEASE + ANGINA (Guidelines I.C.9.b):
+- ICD-10-CM has combination codes: I25.11x (native coronary artery with angina) — do NOT add separate angina code
+- If CAD patient admitted for AMI: AMI is sequenced BEFORE coronary artery disease
+- Bypass graft disease: I25.7xx — specify graft type and vessel
+
+ACUTE MI (Guidelines I.C.9.e):
+- STEMI: I21.0-I21.3 — specify anatomical location (anterior, inferior, lateral, etc.)
+- NSTEMI: I21.4
+- STEMI converting to NSTEMI after thrombolytics: still code as STEMI
+- NSTEMI evolving to STEMI: code as STEMI
+- Acute MI codes valid for 4 weeks; after 4 weeks use aftercare or I25.2 (old MI)
+- Subsequent AMI within 4 weeks: I22.x
+
+ATRIAL FIBRILLATION:
+- Specify type: paroxysmal (I48.0), persistent (I48.11/I48.12/I48.19), long-standing persistent (I48.11), permanent (I48.21)
+- Valvular vs non-valvular affects anticoagulation coding
+- Typical flutter (I48.3) vs atypical flutter (I48.4) — document which
+
+CARDIOMYOPATHY:
+- Specify: dilated (I42.0), hypertrophic obstructive (I42.1), hypertrophic non-obstructive (I42.2), restrictive (I42.5), ischemic — do NOT leave as unspecified I42.9
+
+CEREBROVASCULAR SEQUELAE (Guidelines I.C.9.d):
+- I69.x codes for neurological deficits AFTER cerebrovascular disease
+- Document dominant vs non-dominant side for hemiplegia/hemiparesis
+- I69 codes can be used alongside I60-I67 if current CVD AND residual deficits from prior CVD both present
+
+DEVICE DOCUMENTATION:
+- ICD presence: Z95.810 — always document when present, affects DRG
+- Pacemaker: Z95.0 — document type and lead placement
+- CRT: Z95.810 with documentation of indication
+
+ACUTE AND CHRONIC (Guideline I.B.8):
+- If same condition is both acute and chronic: code BOTH, sequence acute first`,
+
+  'Emergency Medicine': `EMERGENCY MEDICINE CDI RULES — GROUNDED IN FY2026 ICD-10-CM OFFICIAL GUIDELINES:
+
+PRINCIPAL DIAGNOSIS (Section II):
+- For inpatient admission from ED: condition established as chiefly responsible for admission after study
+- "Possible" or "probable" diagnoses in INPATIENT setting: code as confirmed (Section II.H)
+- For OUTPATIENT/ED encounters: do NOT code uncertain diagnoses — code signs/symptoms instead (Section IV.D)
+- This distinction is critical: inpatient vs observation vs outpatient ED affects coding rules
+
+SEPSIS (Guidelines I.C.1.d):
+- Do NOT use "urosepsis" — must specify sepsis with urinary source
+- Negative cultures do not preclude sepsis — clinical evidence + provider documentation sufficient
+- Sepsis = underlying infection code first + R65.2x for severe sepsis + organ dysfunction codes
+- Septic shock cannot be principal diagnosis
+
+ALTERED MENTAL STATUS / ENCEPHALOPATHY:
+- Specify etiology when determined: metabolic (G93.41), hepatic (K72.x), toxic (G92.x), septic, hypoxic
+- Do NOT leave as R41.3 (other amnesia) or R55 (syncope) if etiology established
+
+SYNCOPE (R55):
+- Code R55 only when etiology not determined
+- If cardiac etiology identified: code the cardiac condition + syncope as secondary
+- Document risk stratification — affects admission decision medical necessity
+
+CHEST PAIN:
+- Atypical chest pain (R07.9) vs precordial (R07.2) vs on breathing (R07.1)
+- If ACS ruled out: document as "noncardiac chest pain" — more specific than generic R07.9
+- Do NOT code "rule out MI" — code clinical findings/symptoms in outpatient setting
+
+TRAUMA:
+- Code EACH injury separately — do NOT use T07 (unspecified multiple injuries) when individual injuries documented
+- 7th character required: A (initial), D (subsequent), S (sequela)
+- External cause codes (V, W, X, Y): always assign mechanism of injury + place of occurrence (Y93.x) + activity (Y93.x)
+- Open vs closed wounds: significant coding and DRG difference
+
+SUBSTANCE OVERDOSE (Guidelines I.C.5.b):
+- Specify: intentional (self-harm) vs accidental vs assault vs undetermined
+- T-code for poisoning/adverse effect: substance-specific codes required
+- Document substance use disorder if present — F-codes add CC/MCC
+
+ACUTE AND CHRONIC CONDITIONS (Guideline I.B.8):
+- Code BOTH when acute and chronic condition present — sequence acute first
+- Example: acute-on-chronic respiratory failure, acute-on-chronic CHF
+
+COMORBIDITIES:
+- All conditions that affect management during the encounter are codeable (Guideline I.B.6)
+- Document how each comorbidity affected decision-making or treatment — supports medical necessity
+- BMI codeable from nurse documentation (Guideline I.B.14)
+
+OBSERVATION vs INPATIENT:
+- Document medical necessity criteria for admission level of care
+- Conditions requiring monitoring: document instability, need for IV therapy, diagnostic workup rationale`,
+
+  'Pulmonology': `PULMONOLOGY CDI RULES — GROUNDED IN FY2026 ICD-10-CM OFFICIAL GUIDELINES:
+
+COPD (Guidelines I.C.10.a):
+- ALWAYS distinguish: acute exacerbation (J44.1) vs stable/uncomplicated COPD (J44.0)
+- Acute exacerbation = worsening/decompensation of chronic condition — NOT same as infection superimposed on COPD
+- COPD + acute lower respiratory infection: J44.0 + infection code
+- COPD + acute bronchitis: J44.0 + J20.x
+- Do NOT use J44.1 for infection-triggered exacerbation — use J44.0 + infection code
+
+ASTHMA (J45.x):
+- Specify severity: mild intermittent (J45.2x), mild persistent (J45.3x), moderate persistent (J45.4x), severe persistent (J45.5x)
+- Specify status: uncomplicated, acute exacerbation, status asthmaticus
+- Document whether exacerbation triggered by identifiable cause
+
+ACUTE RESPIRATORY FAILURE (Guidelines I.C.10.b):
+- J96.0x may be principal diagnosis when it is the condition chiefly responsible for admission
+- Specify: hypoxic (J96.01), hypercapnic (J96.02), unspecified (J96.00)
+- Acute-on-chronic respiratory failure: J96.2x
+- Respiratory failure as secondary: when it develops after admission or present but not principal
+- When respiratory failure + another acute condition equally responsible: either may be principal — document circumstances
+
+PULMONARY HYPERTENSION (Guidelines I.C.9.a.11):
+- Secondary PH: code ALSO the underlying condition causing it (COPD, ILD, sleep apnea, LV disease)
+- Primary (I27.0) vs chronic thromboembolic (I27.24) vs other secondary (I27.2x)
+
+PNEUMONIA:
+- Specify organism when known: J12.x (viral), J13 (strep), J14 (H flu), J15.x (bacterial by type), J18.x (unspecified)
+- Aspiration pneumonia: J69.0 — document causal mechanism
+- Ventilator-associated: J95.851 ONLY when provider explicitly documents VAP + organism code
+- Hospital-acquired vs community-acquired: document for medical necessity
+
+SLEEP APNEA:
+- Specify: obstructive (G47.33) vs central (G47.31) vs complex/mixed (G47.37)
+- Link to obesity (E66.x) when present — combination strengthens medical necessity
+- Hypersomnia due to sleep apnea: G47.x — document functional impact
+- CPAP compliance: document adherence/non-adherence status
+
+INTERSTITIAL LUNG DISEASE:
+- Specify type: IPF (J84.112), hypersensitivity pneumonitis (J67.x), sarcoidosis (D86.x), cryptogenic organizing pneumonia (J84.116)
+- Do NOT leave as J84.9 (unspecified ILD) when specific diagnosis established
+
+TOBACCO USE:
+- Current smoker: F17.21x (nicotine dependence, cigarettes — specify uncomplicated/with withdrawal/in remission)
+- Pack-year history: document in note — supports coding and quality metrics
+- Former smoker: Z87.891 (personal history)
+
+OXYGEN THERAPY DOCUMENTATION:
+- Hypoxemia at rest: SpO2 <88% on room air = medical necessity for supplemental O2
+- Exertional hypoxia: document SpO2 drop with activity
+- Long-term O2 use: Z99.81 — document L/min requirement at rest vs exertion
+
+ACUTE AND CHRONIC (Guideline I.B.8):
+- Acute-on-chronic respiratory failure: code both — J96.2x
+- Acute exacerbation of chronic condition: always code both, sequence acute first`
+};
 
 let apiKey = localStorage.getItem('pa_api_key') || '';
 
@@ -597,7 +1110,9 @@ function updateCharCount() {
 }
 
 function loadExample() {
-  document.getElementById('noteInput').value = EXAMPLE_NOTE;
+  const specialty = document.getElementById('specialtySelect').value;
+  const note = SPECIALTY_EXAMPLES[specialty] || SPECIALTY_EXAMPLES['Hospitalist'];
+  document.getElementById('noteInput').value = note;
   updateCharCount();
 }
 
@@ -629,25 +1144,40 @@ async function analyze() {
   document.getElementById('analyzeBtn').disabled = true;
   document.getElementById('statusBadge').textContent = 'Analyzing...';
 
-  const system = `You are a senior Clinical Documentation Improvement (CDI) specialist and expert ICD-10-CM/PCS coder with deep knowledge of MS-DRG optimization and CC/MCC capture.
+  const specialtyRules = SPECIALTY_CDI_RULES[specialty] || '';
+  const system = `You are a senior Clinical Documentation Improvement (CDI) specialist and expert ICD-10-CM/PCS coder. Your rules are grounded in the FY2026 ICD-10-CM Official Guidelines for Coding and Reporting (October 1, 2025 - September 30, 2026), published by CMS and NCHS.
+
+${specialtyRules}
+
+UNIVERSAL ICD-10-CM RULES (FY2026 Official Guidelines):
+- Combination codes: assign a single combination code when it fully captures both conditions — do NOT double-code (Guideline I.B.9)
+- Acute + chronic: code both, sequence acute first (Guideline I.B.8)
+- Signs/symptoms: do NOT code separately if integral to a confirmed diagnosis (Guideline I.B.5)
+- Signs/symptoms: DO code separately if not routinely associated with the confirmed diagnosis (Guideline I.B.6)
+- Laterality: required on most codes — "unspecified" codes should be rare exceptions (Guideline I.B.13)
+- Complications of care: must have documented cause-and-effect relationship (Guideline I.B.16)
+- Clinician documentation: BMI, pressure ulcer stage, laterality, coma scale, NIHSS, blood alcohol, SDOH may be coded from ANY clinician's documentation (Guideline I.B.14)
+- Sequela: residual coded first, then sequela code second (Guideline I.B.10)
+- Impending/threatened conditions: if it occurred code as confirmed; if not, code underlying condition (Guideline I.B.11)
 
 Analyze the clinical note for documentation gaps that impact reimbursement, DRG weight, and quality metrics. Identify:
 1. Missing diagnoses supported by clinical evidence but not documented
-2. Diagnoses needing more specificity (wrong ICD-10 level of detail)
-3. Missing secondary conditions, complications, or comorbidities that qualify as CC or MCC
-4. Linkage opportunities (e.g., hypertensive heart disease combining HTN + HF)
-5. Severity qualifiers missing (e.g., sepsis without organism or severity classification)
+2. Diagnoses needing more specificity per official guidelines
+3. Missing secondary CC/MCC conditions
+4. Combination code linkage opportunities (HTN+HF, CAD+angina, etc.)
+5. Severity, acuity, etiology, and laterality gaps
+6. Sequencing errors that affect DRG assignment
 
-For each flag assess DRG impact: "MCC", "CC", "Higher DRG weight", or "Additional CC".
+For each flag assess DRG impact: "Adds MCC", "Adds CC", "Higher DRG weight", "Additional CC", or "Prevents appropriate DRG assignment".
 
 Respond ONLY with a valid JSON array. No markdown, no preamble, no explanation outside JSON.
 
 Each object must have exactly these fields:
 - type: "critical" | "warning" | "suggestion"
 - title: string, max 10 words
-- body: string, 1-2 sentences explaining the gap and its clinical/coding rationale
-- drgImpact: string, e.g. "Adds MCC" or "Higher DRG weight" or null
-- currentCode: string or null (current ICD-10 code if applicable)
+- body: string, 1-2 sentences citing the specific guideline rule and clinical rationale
+- drgImpact: string or null
+- currentCode: string or null
 - suggestedCodes: array of {code: string, description: string}
 
 Return maximum 6 flags. Prioritize by revenue impact.`;
