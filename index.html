@@ -1,52 +1,1552 @@
-PA
-Physician Assist
-ENCOUNTER WORKSPACE
-PROVIDER
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Physician Assist — Encounter Workspace</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,300;1,6..72,400&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:        #F2F1EE;
+  --surface:   #FFFFFF;
+  --surface2:  #F8F7F4;
+  --border:    #E4E3DF;
+  --border-md: #CCCCC8;
+  --text:      #1A1A18;
+  --muted:     #6B6B67;
+  --hint:      #ABABAA;
+  --green:     #1D9E75;
+  --green-lt:  #E8F7F2;
+  --green-dk:  #0F6E50;
+  --amber:     #D97706;
+  --amber-lt:  #FEF3C7;
+  --blue:      #2563EB;
+  --blue-lt:   #EFF6FF;
+  --red:       #DC2626;
+  --red-lt:    #FEF2F2;
+  --purple:    #7C3AED;
+  --purple-lt: #F5F3FF;
+  --r:         8px;
+  --font-ui:   'Syne', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+  --font-note: 'Newsreader', Georgia, serif;
+}
+body{font-family:var(--font-ui);background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden;font-size:13px;}
 
-SPECIALTY
-        Hospitalist
-        Orthopedics
-        Cardiology
-        ENT
-        OB/GYN
-        Oncology
-        Pulmonology
-        Emergency Medicine
-        Pain Management / Spine
-        Internal Medicine
-      
-PATIENT ID
+/* ── Top bar ─────────────────────────────────────────────────────────── */
+.topbar{
+  height:52px;background:var(--surface);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:0;flex-shrink:0;
+  box-shadow:0 1px 3px rgba(0,0,0,.04);
+}
+.brand{
+  display:flex;align-items:center;gap:9px;padding:0 20px;
+  border-right:1px solid var(--border);height:100%;min-width:180px;
+}
+.brand-mark{
+  width:28px;height:28px;border-radius:6px;
+  background:linear-gradient(135deg,var(--green),#34c89a);
+  display:flex;align-items:center;justify-content:center;
+  color:white;font-size:14px;font-weight:700;letter-spacing:-.5px;
+}
+.brand-name{font-size:13px;font-weight:700;letter-spacing:-.2px;color:var(--text);}
+.brand-sub{font-size:10px;color:var(--hint);letter-spacing:.04em;text-transform:uppercase;}
+.enc-meta{
+  display:flex;align-items:center;gap:0;flex:1;height:100%;overflow:hidden;
+}
+.meta-field{
+  display:flex;flex-direction:column;padding:0 14px;height:100%;
+  justify-content:center;border-right:1px solid var(--border);min-width:0;
+}
+.meta-field label{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--hint);margin-bottom:2px;}
+.meta-field input,.meta-field select{
+  font-family:var(--font-ui);font-size:12px;font-weight:500;color:var(--text);
+  background:transparent;border:none;outline:none;width:100%;
+}
+.meta-field select{cursor:pointer;}
+.topbar-actions{display:flex;align-items:center;gap:8px;padding:0 16px;flex-shrink:0;}
+.btn{
+  font-family:var(--font-ui);font-size:12px;font-weight:600;
+  padding:7px 14px;border-radius:6px;border:none;cursor:pointer;
+  display:inline-flex;align-items:center;gap:6px;transition:all .12s;
+  white-space:nowrap;
+}
+.btn-run{
+  background:var(--green);color:white;padding:8px 18px;font-size:13px;
+  box-shadow:0 1px 3px rgba(29,158,117,.3);
+}
+.btn-run:hover{background:var(--green-dk);}
+.btn-run:disabled{opacity:.5;cursor:not-allowed;}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);padding:6px 12px;}
+.btn-ghost:hover{background:var(--surface2);color:var(--text);}
+.api-btn{background:var(--surface2);color:var(--muted);border:1px solid var(--border);font-size:11px;padding:5px 10px;}
 
-VISIT DATE
+.status-pill{
+  font-size:10px;font-weight:600;padding:3px 9px;border-radius:20px;
+  border:1px solid;letter-spacing:.03em;text-transform:uppercase;
+}
+.pill-idle{background:var(--surface2);color:var(--hint);border-color:var(--border);}
+.pill-running{background:var(--blue-lt);color:var(--blue);border-color:var(--blue);}
+.pill-done{background:var(--green-lt);color:var(--green-dk);border-color:var(--green);}
+.pill-error{background:var(--red-lt);color:var(--red);border-color:var(--red);}
 
-VISIT TYPE
-        Outpatient clinic visit
-        Workers comp visit
-        Inpatient progress note
-        Procedure note
-        ED visit
-        Telehealth visit
-      
-READY
-Example ↓ Export
+/* ── Three-panel layout ──────────────────────────────────────────────── */
+.workspace{display:flex;flex:1;overflow:hidden;gap:0;}
 
-Run Encounter API Key
-TRANSCRIPT / SOURCE NOTE
-Clear
-DRAFT NOTE
+/* ── Panel base ──────────────────────────────────────────────────────── */
+.panel{display:flex;flex-direction:column;height:100%;overflow:hidden;}
+.panel-head{
+  padding:10px 16px;border-bottom:1px solid var(--border);flex-shrink:0;
+  display:flex;align-items:center;justify-content:space-between;background:var(--surface);
+}
+.panel-title{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);}
+.panel-body{flex:1;overflow-y:auto;padding:14px 16px;}
 
-Copy note
-1
-Paste the encounter transcript in the left panel.
-2
-Fill in provider, specialty, and visit type in the top bar.
-3
-Click Run Encounter — the orchestrator decides what to run and all agents fire in parallel.
-4
-Review and edit the draft note here. Fix CDI flags in the right panel. Approve WC/PA documents.
-5
-Click Export to download everything for EHR upload.
-Quality CDI Orders SOP
-⚕
-Quality review will appear here
-after running the encounter.
+/* ── Left: Transcript ────────────────────────────────────────────────── */
+.panel-left{
+  width:28%;min-width:240px;border-right:1px solid var(--border);background:var(--surface);
+}
+.transcript-area{
+  width:100%;height:100%;resize:none;border:none;outline:none;
+  font-family:var(--font-mono);font-size:11.5px;line-height:1.7;color:var(--text);
+  background:transparent;padding:14px 16px;
+}
+.transcript-area::placeholder{color:var(--hint);}
+.panel-left .panel-body{padding:0;display:flex;flex-direction:column;}
+
+/* ── Center: Draft note ──────────────────────────────────────────────── */
+.panel-center{
+  flex:1;border-right:1px solid var(--border);background:var(--surface);display:flex;flex-direction:column;
+}
+.note-editor{
+  flex:1;overflow-y:auto;padding:24px 32px;font-family:var(--font-note);
+  font-size:14px;line-height:1.85;color:var(--text);
+}
+.note-editor[contenteditable]{outline:none;}
+.note-editor .note-section{margin-bottom:20px;}
+.note-editor .note-label{
+  font-family:var(--font-ui);font-size:10px;font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--green);
+  margin-bottom:6px;display:block;
+}
+.note-editor .note-content{font-size:14px;line-height:1.85;}
+.note-placeholder{
+  color:var(--hint);font-family:var(--font-note);font-style:italic;font-size:14px;
+  line-height:1.85;padding:24px 32px;
+}
+.note-placeholder p{margin-bottom:12px;}
+.note-placeholder .placeholder-step{
+  display:flex;align-items:flex-start;gap:12px;margin-bottom:14px;
+  padding:12px 14px;background:var(--surface2);border-radius:var(--r);
+  border:1px dashed var(--border-md);
+}
+.step-num{
+  width:22px;height:22px;border-radius:50%;background:var(--green);color:white;
+  font-family:var(--font-ui);font-size:11px;font-weight:700;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;margin-top:1px;
+}
+.step-text{font-family:var(--font-ui);font-size:12px;color:var(--muted);line-height:1.5;font-style:normal;}
+
+/* ── Right: Results tabs ─────────────────────────────────────────────── */
+.panel-right{
+  width:34%;min-width:280px;background:var(--surface2);display:flex;flex-direction:column;
+}
+.tab-bar{
+  display:flex;background:var(--surface);border-bottom:1px solid var(--border);
+  flex-shrink:0;overflow-x:auto;gap:0;
+}
+.tab-bar::-webkit-scrollbar{display:none;}
+.tab-btn{
+  font-family:var(--font-ui);font-size:11px;font-weight:600;
+  padding:10px 14px;border:none;background:transparent;cursor:pointer;
+  color:var(--hint);white-space:nowrap;border-bottom:2px solid transparent;
+  transition:all .12s;display:flex;align-items:center;gap:5px;
+}
+.tab-btn.active{color:var(--green);border-bottom-color:var(--green);background:var(--green-lt);}
+.tab-btn:hover:not(.active){color:var(--text);background:var(--surface2);}
+.tab-count{
+  font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px;
+  background:var(--green);color:white;line-height:1.4;
+}
+.tab-count.amber{background:var(--amber);}
+.tab-count.blue{background:var(--blue);}
+.tab-count.red{background:var(--red);}
+.tab-count.purple{background:var(--purple);}
+.tab-pane{display:none;flex:1;overflow-y:auto;padding:14px;}
+.tab-pane.active{display:block;}
+
+/* ── Cards inside panels ─────────────────────────────────────────────── */
+.card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);overflow:hidden;margin-bottom:10px;
+  box-shadow:0 1px 2px rgba(0,0,0,.03);
+}
+.card-head{
+  padding:9px 12px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:8px;background:var(--surface2);
+}
+.card-label{font-size:11px;font-weight:700;color:var(--text);flex:1;}
+.card-body{padding:12px;}
+
+/* ── Flag items ──────────────────────────────────────────────────────── */
+.flag{
+  padding:10px 12px;border-radius:6px;margin-bottom:7px;
+  border-left:3px solid var(--border-md);background:var(--surface);border:1px solid var(--border);
+  border-left-width:3px;
+}
+.flag.critical{border-left-color:var(--red);background:var(--red-lt);}
+.flag.warning{border-left-color:var(--amber);background:var(--amber-lt);}
+.flag.suggestion{border-left-color:var(--green);background:var(--green-lt);}
+.flag-title{font-size:12px;font-weight:600;margin-bottom:3px;}
+.flag.critical .flag-title{color:var(--red);}
+.flag.warning .flag-title{color:var(--amber);}
+.flag.suggestion .flag-title{color:var(--green-dk);}
+.flag-body{font-size:11px;color:var(--muted);line-height:1.5;}
+.flag-codes{margin-top:5px;display:flex;flex-wrap:wrap;gap:4px;}
+.code-chip{font-family:var(--font-mono);font-size:10px;padding:2px 6px;border-radius:4px;background:rgba(0,0,0,.05);color:var(--muted);}
+.flag-conf{
+  font-size:9px;font-weight:600;padding:2px 6px;border-radius:10px;
+  background:rgba(0,0,0,.06);color:var(--muted);margin-left:auto;
+}
+
+/* ── Quality score ───────────────────────────────────────────────────── */
+.quality-score-row{
+  display:flex;align-items:center;gap:14px;padding:12px;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+  margin-bottom:10px;
+}
+.score-ring{
+  width:52px;height:52px;border-radius:50%;border:3px solid var(--border-md);
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;font-weight:700;flex-shrink:0;
+}
+.score-ring.high{border-color:var(--green);color:var(--green-dk);}
+.score-ring.med{border-color:var(--amber);color:var(--amber);}
+.score-ring.low{border-color:var(--red);color:var(--red);}
+.score-detail{flex:1;}
+.score-label{font-size:12px;font-weight:600;margin-bottom:6px;}
+.score-bars{display:flex;flex-direction:column;gap:4px;}
+.sbar{display:flex;align-items:center;gap:6px;}
+.sbar-label{font-size:10px;color:var(--muted);width:80px;flex-shrink:0;}
+.sbar-track{flex:1;height:4px;background:var(--border);border-radius:4px;overflow:hidden;}
+.sbar-fill{height:100%;border-radius:4px;transition:width .5s ease;}
+.sbar-pct{font-size:10px;color:var(--muted);width:28px;text-align:right;}
+
+/* ── Order items ─────────────────────────────────────────────────────── */
+.order-item{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:9px 12px;border-bottom:1px solid var(--border);
+}
+.order-item:last-child{border-bottom:none;}
+.order-cat{
+  font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+  padding:2px 7px;border-radius:10px;flex-shrink:0;margin-top:1px;
+}
+.order-cat.lab{background:#EFF6FF;color:#1E40AF;}
+.order-cat.imaging{background:#F5F3FF;color:#4C1D95;}
+.order-cat.medication{background:#FEF3C7;color:#92400E;}
+.order-cat.referral{background:#E8F7F2;color:#0F6E56;}
+.order-cat.therapy{background:#FEF2F2;color:#991B1B;}
+.order-cat.procedure{background:#F0FDF4;color:#166534;}
+.order-body{flex:1;min-width:0;}
+.order-name{font-size:12px;font-weight:600;color:var(--text);}
+.order-indication{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4;}
+.order-flag{font-size:9px;color:var(--amber);font-weight:600;margin-top:2px;}
+
+/* ── WC / PA doc preview ─────────────────────────────────────────────── */
+.doc-preview{
+  font-family:var(--font-note);font-size:12px;line-height:1.75;color:var(--text);
+  white-space:pre-wrap;padding:0;
+}
+.doc-preview-container{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+  padding:14px;max-height:420px;overflow-y:auto;
+}
+.doc-edit{
+  width:100%;font-family:var(--font-note);font-size:12px;line-height:1.75;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+  padding:14px;resize:vertical;min-height:200px;outline:none;color:var(--text);
+}
+.doc-edit:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,158,117,.08);}
+
+/* ── Loading states ──────────────────────────────────────────────────── */
+.loading-row{
+  display:flex;align-items:center;gap:8px;padding:10px 0;
+  font-size:11px;color:var(--muted);
+}
+.spinner{
+  width:14px;height:14px;border:2px solid var(--border);
+  border-top-color:var(--green);border-radius:50%;
+  animation:spin .7s linear infinite;flex-shrink:0;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+.empty{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:32px 16px;text-align:center;gap:8px;
+}
+.empty-icon{font-size:28px;opacity:.3;}
+.empty-txt{font-size:11px;color:var(--hint);line-height:1.5;}
+
+/* ── Evidence chain ──────────────────────────────────────────────────── */
+.chain{
+  display:flex;align-items:flex-start;gap:6px;flex-wrap:wrap;
+  padding:8px 12px;background:var(--surface2);border-radius:6px;margin-bottom:6px;font-size:11px;
+}
+.chain-node{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:2px 8px;border-radius:20px;font-size:10px;font-weight:500;
+}
+.chain-node.finding{background:#EFF6FF;color:#1E40AF;}
+.chain-node.problem{background:#E8F7F2;color:#0F6E56;}
+.chain-node.order{background:#F5F3FF;color:#4C1D95;}
+.chain-node.missing{background:#FEF2F2;color:#991B1B;border:1px dashed var(--red);}
+.chain-arrow{color:var(--hint);font-size:10px;}
+
+/* ── SOP / scribe workflow ───────────────────────────────────────────── */
+.sop-step{
+  display:flex;align-items:flex-start;gap:10px;padding:8px 0;
+  border-bottom:1px solid var(--border);
+}
+.sop-step:last-child{border-bottom:none;}
+.sop-num{
+  width:20px;height:20px;border-radius:50%;background:var(--green);color:white;
+  font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;margin-top:1px;
+}
+.sop-num.done{background:var(--border-md);color:var(--hint);}
+.sop-text{font-size:12px;color:var(--text);line-height:1.5;flex:1;}
+.sop-sub{font-size:10px;color:var(--muted);margin-top:2px;}
+
+/* ── Agent progress bar ──────────────────────────────────────────────── */
+.agent-progress{
+  padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border);
+  display:none;
+}
+.agent-progress.visible{display:block;}
+.agent-steps{display:flex;gap:6px;flex-wrap:wrap;}
+.agent-step{
+  display:flex;align-items:center;gap:5px;font-size:10px;font-weight:500;
+  padding:3px 9px;border-radius:20px;border:1px solid var(--border);color:var(--hint);
+  background:var(--surface);
+}
+.agent-step.running{color:var(--blue);border-color:var(--blue);background:var(--blue-lt);}
+.agent-step.done{color:var(--green-dk);border-color:var(--green);background:var(--green-lt);}
+.agent-step.error{color:var(--red);border-color:var(--red);background:var(--red-lt);}
+.agent-step .sdot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;}
+.agent-step.running .sdot{animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+/* ── Divider ─────────────────────────────────────────────────────────── */
+.panel-divider{height:1px;background:var(--border);margin:10px 0;}
+
+/* ── API key modal ───────────────────────────────────────────────────── */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;
+  display:flex;align-items:center;justify-content:center;
+}
+.modal{background:var(--surface);border-radius:12px;padding:24px;width:400px;box-shadow:0 20px 60px rgba(0,0,0,.15);}
+.modal-title{font-size:16px;font-weight:700;margin-bottom:6px;}
+.modal-sub{font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.5;}
+.modal input{
+  width:100%;font-family:var(--font-mono);font-size:12px;padding:10px 12px;
+  border:1px solid var(--border);border-radius:6px;outline:none;background:var(--surface2);
+  margin-bottom:10px;
+}
+.modal input:focus{border-color:var(--green);}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;}
+
+/* ── Scrollbars ──────────────────────────────────────────────────────── */
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border-md);border-radius:4px;}
+
+/* ── Misc ────────────────────────────────────────────────────────────── */
+textarea,input,select,button{font-family:inherit;}
+.label-chip{
+  font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+  padding:2px 7px;border-radius:10px;
+}
+</style>
+</head>
+<body>
+
+<!-- API Key Modal -->
+<div class="modal-overlay" id="apiModal" style="display:none">
+  <div class="modal">
+    <div class="modal-title">Anthropic API Key</div>
+    <div class="modal-sub">Enter your API key to enable AI agents. Stored locally in your browser only. Demo mode — no real PHI.</div>
+    <input type="password" id="apiKeyInput" placeholder="sk-ant-..."/>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeAPIModal()">Cancel</button>
+      <button class="btn btn-run" onclick="saveAPIKey()">Save key</button>
+    </div>
+  </div>
+</div>
+
+<!-- Top bar -->
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark">PA</div>
+    <div>
+      <div class="brand-name">Physician Assist</div>
+      <div class="brand-sub">Encounter Workspace</div>
+    </div>
+  </div>
+
+  <div class="enc-meta">
+    <div class="meta-field" style="min-width:130px">
+      <label>Provider</label>
+      <input type="text" id="enc-provider" placeholder="Dr. Smith"/>
+    </div>
+    <div class="meta-field" style="min-width:130px">
+      <label>Specialty</label>
+      <select id="enc-specialty">
+        <option>Hospitalist</option>
+        <option>Orthopedics</option>
+        <option>Cardiology</option>
+        <option>ENT</option>
+        <option>OB/GYN</option>
+        <option>Oncology</option>
+        <option>Pulmonology</option>
+        <option>Emergency Medicine</option>
+        <option>Pain Management / Spine</option>
+        <option>Internal Medicine</option>
+      </select>
+    </div>
+    <div class="meta-field" style="min-width:120px">
+      <label>Patient ID</label>
+      <input type="text" id="enc-patient" placeholder="de-identified"/>
+    </div>
+    <div class="meta-field" style="min-width:100px">
+      <label>Visit date</label>
+      <input type="text" id="enc-date" placeholder="MM/DD/YYYY"/>
+    </div>
+    <div class="meta-field" style="min-width:130px">
+      <label>Visit type</label>
+      <select id="enc-type">
+        <option>Outpatient clinic visit</option>
+        <option>Workers comp visit</option>
+        <option>Inpatient progress note</option>
+        <option>Procedure note</option>
+        <option>ED visit</option>
+        <option>Telehealth visit</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="topbar-actions">
+    <span class="status-pill pill-idle" id="run-status">Ready</span>
+    <button class="btn btn-ghost" onclick="loadExample()">Example</button>
+    <button class="btn btn-ghost" onclick="exportPackage()">↓ Export</button>
+    <button class="btn btn-run" id="run-btn" onclick="runEncounter()">
+      <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><polygon points="5,2 13,8 5,14"/></svg>
+      Run Encounter
+    </button>
+    <button class="api-btn btn" onclick="openAPIModal()">API Key</button>
+  </div>
+</header>
+
+<!-- Agent progress bar -->
+<div class="agent-progress" id="agent-progress">
+  <div class="agent-steps" id="agent-steps"></div>
+</div>
+
+<!-- Three-panel workspace -->
+<div class="workspace">
+
+  <!-- ── LEFT: Transcript ── -->
+  <div class="panel panel-left">
+    <div class="panel-head">
+      <span class="panel-title">Transcript / Source Note</span>
+      <button class="btn btn-ghost" style="font-size:10px;padding:3px 8px" onclick="clearTranscript()">Clear</button>
+    </div>
+    <div class="panel-body">
+      <textarea class="transcript-area" id="transcript"
+        placeholder="Paste the encounter transcript, ambient scribe output, or raw notes here.
+
+The orchestrator will read this and decide which engines to run: CDI analysis, WC report, prior auth, order generation, patient summary.
+
+Supports: SOAP notes, visit transcripts, dictation, ambient tool output."></textarea>
+    </div>
+  </div>
+
+  <!-- ── CENTER: Draft note ── -->
+  <div class="panel panel-center">
+    <div class="panel-head">
+      <span class="panel-title">Draft Note</span>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <span style="font-size:10px;color:var(--hint);" id="note-word-count"></span>
+        <button class="btn btn-ghost" style="font-size:10px;padding:3px 8px" onclick="copyNote()">Copy note</button>
+      </div>
+    </div>
+    <div id="note-area">
+      <div class="note-placeholder" id="note-placeholder">
+        <div class="placeholder-step">
+          <div class="step-num">1</div>
+          <div class="step-text">Paste the encounter transcript in the left panel.</div>
+        </div>
+        <div class="placeholder-step">
+          <div class="step-num">2</div>
+          <div class="step-text">Fill in provider, specialty, and visit type in the top bar.</div>
+        </div>
+        <div class="placeholder-step">
+          <div class="step-num">3</div>
+          <div class="step-text">Click <strong>Run Encounter</strong> — the orchestrator decides what to run and all agents fire in parallel.</div>
+        </div>
+        <div class="placeholder-step">
+          <div class="step-num">4</div>
+          <div class="step-text">Review and edit the draft note here. Fix CDI flags in the right panel. Approve WC/PA documents.</div>
+        </div>
+        <div class="placeholder-step">
+          <div class="step-num">5</div>
+          <div class="step-text">Click <strong>Export</strong> to download everything for EHR upload.</div>
+        </div>
+      </div>
+      <div class="note-editor" id="note-editor" contenteditable="true" style="display:none;" oninput="updateWordCount()"></div>
+    </div>
+  </div>
+
+  <!-- ── RIGHT: Results ── -->
+  <div class="panel panel-right">
+    <div class="tab-bar" id="tab-bar">
+      <button class="tab-btn active" data-tab="quality" onclick="switchTab('quality',this)">Quality</button>
+      <button class="tab-btn" data-tab="cdi" onclick="switchTab('cdi',this)">CDI <span class="tab-count" id="cdi-count" style="display:none">0</span></button>
+      <button class="tab-btn" data-tab="wc" onclick="switchTab('wc',this)" id="tab-wc" style="display:none">WC Report</button>
+      <button class="tab-btn" data-tab="pa" onclick="switchTab('pa',this)" id="tab-pa" style="display:none">Prior Auth</button>
+      <button class="tab-btn" data-tab="orders" onclick="switchTab('orders',this)">Orders <span class="tab-count blue" id="orders-count" style="display:none">0</span></button>
+      <button class="tab-btn" data-tab="sop" onclick="switchTab('sop',this)">SOP</button>
+    </div>
+
+    <!-- Quality tab -->
+    <div class="tab-pane active" id="tab-quality">
+      <div class="empty" id="quality-empty">
+        <div class="empty-icon">⚕</div>
+        <div class="empty-txt">Quality review will appear here<br>after running the encounter.</div>
+      </div>
+      <div id="quality-content" style="display:none">
+        <div class="quality-score-row" id="quality-score-row"></div>
+        <div id="quality-issues"></div>
+        <div class="card" id="soap-card" style="display:none">
+          <div class="card-head"><span class="card-label">SOAP Validation</span></div>
+          <div class="card-body" id="soap-results"></div>
+        </div>
+        <div class="card" id="mdm-card" style="display:none">
+          <div class="card-head"><span class="card-label">E/M MDM Score</span></div>
+          <div class="card-body" id="mdm-results"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CDI tab -->
+    <div class="tab-pane" id="tab-cdi">
+      <div class="empty" id="cdi-empty">
+        <div class="empty-icon">🔍</div>
+        <div class="empty-txt">CDI flags will appear here<br>after running the encounter.</div>
+      </div>
+      <div id="cdi-content" style="display:none"></div>
+    </div>
+
+    <!-- WC tab -->
+    <div class="tab-pane" id="tab-wc">
+      <div class="empty" id="wc-empty">
+        <div class="empty-icon">📋</div>
+        <div class="empty-txt">Workers comp report will appear<br>when a WC encounter is detected.</div>
+      </div>
+      <div id="wc-content" style="display:none"></div>
+    </div>
+
+    <!-- PA tab -->
+    <div class="tab-pane" id="tab-pa">
+      <div class="empty" id="pa-empty">
+        <div class="empty-icon">🔑</div>
+        <div class="empty-txt">Prior auth letter will appear<br>when authorization items are detected.</div>
+      </div>
+      <div id="pa-content" style="display:none"></div>
+    </div>
+
+    <!-- Orders tab -->
+    <div class="tab-pane" id="tab-orders">
+      <div class="empty" id="orders-empty">
+        <div class="empty-icon">📝</div>
+        <div class="empty-txt">Generated orders will appear here<br>after running the encounter.</div>
+      </div>
+      <div id="orders-content" style="display:none"></div>
+    </div>
+
+    <!-- SOP tab -->
+    <div class="tab-pane" id="tab-sop">
+      <div class="card">
+        <div class="card-head"><span class="card-label">Scribe SOP — Every Encounter</span></div>
+        <div class="card-body">
+          <div class="sop-step"><div class="sop-num">1</div><div class="sop-text">Paste transcript or note<div class="sop-sub">Left panel. Ambient tool output, dictation, or typed notes.</div></div></div>
+          <div class="sop-step"><div class="sop-num">2</div><div class="sop-text">Set encounter context<div class="sop-sub">Provider, specialty, visit type in top bar.</div></div></div>
+          <div class="sop-step"><div class="sop-num">3</div><div class="sop-text">Click Run Encounter<div class="sop-sub">Orchestrator reads note → all agents fire in parallel. ~20-25 seconds.</div></div></div>
+          <div class="sop-step"><div class="sop-num">4</div><div class="sop-text">Clean the draft note<div class="sop-sub">Center panel. Edit inline. The note is a live document.</div></div></div>
+          <div class="sop-step"><div class="sop-num">5</div><div class="sop-text">Fix Quality / CDI flags<div class="sop-sub">Right panel → Quality tab. Address critical flags. Resolve CDI specificity gaps.</div></div></div>
+          <div class="sop-step"><div class="sop-num">6</div><div class="sop-text">Review WC / PA documents<div class="sop-sub">If WC or PA tabs appear — review, edit inline, and finalize before export.</div></div></div>
+          <div class="sop-step"><div class="sop-num">7</div><div class="sop-text">Export package<div class="sop-sub">Top bar → Export. Downloads all approved outputs as .txt for EHR paste or upload.</div></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-label">15% Human Oversight — What Scribes Own</span></div>
+        <div class="card-body" style="font-size:11px;color:var(--muted);line-height:1.7;">
+          <div style="margin-bottom:8px;">✓ <strong style="color:var(--text)">Accuracy check</strong> — verify AI output matches what the provider actually said</div>
+          <div style="margin-bottom:8px;">✓ <strong style="color:var(--text)">Clinical judgment</strong> — flag anything that doesn't match clinical context</div>
+          <div style="margin-bottom:8px;">✓ <strong style="color:var(--text)">CDI queries</strong> — send AHIMA-compliant queries when CDI flags require clarification</div>
+          <div style="margin-bottom:8px;">✓ <strong style="color:var(--text)">WC / PA review</strong> — ensure legal documents reflect provider intent</div>
+          <div>✓ <strong style="color:var(--text)">Final sign-off</strong> — provider attest after scribe QA is complete</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end right panel -->
+</div><!-- end workspace -->
+
+<script>
+// ── API ──────────────────────────────────────────────────────────────────
+const MODEL = 'claude-sonnet-4-20250514';
+
+function getKey(){ return localStorage.getItem('pa_enc_key') || ''; }
+function openAPIModal(){ document.getElementById('apiModal').style.display='flex'; }
+function closeAPIModal(){ document.getElementById('apiModal').style.display='none'; }
+function saveAPIKey(){
+  const k = document.getElementById('apiKeyInput').value.trim();
+  if(k){ localStorage.setItem('pa_enc_key',k); closeAPIModal(); }
+}
+
+async function claude(system, user, maxTokens=1600){
+  const key = getKey();
+  if(!key){ openAPIModal(); throw new Error('API key required'); }
+  const r = await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'x-api-key':key,
+      'anthropic-version':'2023-06-01',
+      'anthropic-dangerous-direct-browser-access':'true'
+    },
+    body: JSON.stringify({ model:MODEL, max_tokens:maxTokens, system, messages:[{role:'user',content:user}] })
+  });
+  const d = await r.json();
+  if(d.error) throw new Error(d.error.message);
+  return d.content[0].text;
+}
+
+// ── Example note ─────────────────────────────────────────────────────────
+const EXAMPLES = {
+  'Hospitalist': {
+    note: `Patient is a 58F presenting for follow-up of acute decompensated heart failure. She reports dyspnea at rest, 2-pillow orthopnea, bilateral leg swelling. Weight up 6kg from dry weight. BNP on admission was 4,200. Echo last week: LVEF 28%, dilated LV, no significant valvular disease.
+
+PMH: Hypertension, Type 2 diabetes, CKD (last creatinine 1.9, GFR 38).
+
+Exam: HR 94, BP 148/88, SpO2 93% on 2L NC. JVD present. Bibasilar crackles. 3+ pitting edema bilateral lower extremities.
+
+Labs today: BNP 1,840. Cr 2.2 (baseline 1.9). Glucose 186. HbA1c due.
+
+Assessment:
+1. Acute decompensated heart failure
+2. Hypertension
+3. Diabetes
+4. CKD
+5. AKI
+
+Plan:
+- Continue IV Lasix 80mg BID
+- Echo ordered to reassess EF
+- Nephrology consult for AKI management
+- Hold metformin given AKI
+- Repeat BMP tomorrow
+- Continue sacubitril/valsartan
+- Cardiology follow-up in 2 weeks`,
+    provider:'Dr. Patel', patient:'R.M. (de-identified)', date:'05/01/2026', type:'Inpatient progress note'
+  },
+  'Orthopedics': {
+    note: `Patient is a 44M construction worker presenting 6 weeks post right shoulder injury. Fell from scaffold approximately 6 feet onto right shoulder on 04/01/2026. Employer: Metro Construction LLC. DOI: 04/01/2026. Claim: WC-2026-04201.
+
+Reports pain 6/10 at rest, 8/10 with movement. Cannot abduct arm past 45 degrees. Sleep disrupted due to pain. Has been doing home exercises per PT instructions.
+
+PMH: None significant. No prior right shoulder injury.
+
+Conservative tx: PT 2x/week x 6 weeks — minimal improvement. Meloxicam 15mg daily x 6 weeks — partial pain relief only. Ice and rest — no sustained improvement.
+
+MRI right shoulder (04/10/2026): Full thickness supraspinatus tear with 2cm gap. Subscapularis intact. Mild AC joint arthropathy.
+
+Exam: Right shoulder active ROM — forward flexion 80 degrees, abduction 45 degrees, ER 20 degrees. Positive drop arm test. Positive empty can test. Atrophy of supraspinatus fossa noted. Neurovascular intact.
+
+Assessment:
+1. Full thickness right rotator cuff tear (supraspinatus)
+2. Right shoulder impingement
+3. Work-related injury
+
+Plan:
+- Request authorization for right shoulder arthroscopic rotator cuff repair
+- Continue PT pending authorization
+- Work status: modified duty — no use of right upper extremity for lifting, no overhead work
+- Follow up 4 weeks`,
+    provider:'Dr. Rivera', patient:'T.W. (de-identified)', date:'05/01/2026', type:'Workers comp visit'
+  },
+  'Cardiology': {
+    note: `Patient is a 67M with known ischemic cardiomyopathy presenting for device clinic follow-up. ICD implanted 2 years ago for LVEF 28%, non-sustained VT. Reports one shock 3 weeks ago during yard work. No syncope or pre-syncope. Dyspnea on moderate exertion — NYHA Class II.
+
+PMH: CAD — CABG 2019, Type 2 DM, HTN, CKD Stage 3b (GFR 34), AFib on anticoagulation.
+
+Medications: sacubitril/valsartan 97/103mg BID, carvedilol 25mg BID, eplerenone 25mg, apixaban 5mg BID, atorvastatin 80mg, metformin held (CKD).
+
+ICD interrogation today: One appropriate shock for VT at 186 bpm on 04/10/2026. No inappropriate shocks. Sensing and pacing thresholds appropriate. Battery at 6.2V, estimated longevity 4.1 years.
+
+Exam: HR 68 paced, BP 118/72. No JVD. Lungs clear. Trace ankle edema. ICD pocket intact, no erythema.
+
+Labs (last week): BNP 340, Cr 1.9, GFR 34, K 4.6, HbA1c 7.4.
+
+Assessment:
+1. Ischemic cardiomyopathy with reduced EF
+2. Appropriate ICD shock — VT
+3. Atrial fibrillation
+4. CAD post-CABG
+5. CKD Stage 3b
+6. Diabetes
+
+Plan:
+- Increase carvedilol to 37.5mg BID — tolerated at current dose
+- Echo to reassess LVEF
+- EP consult re: VT ablation consideration
+- Continue anticoagulation for AFib
+- Electrolytes recheck in 2 weeks
+- Return in 3 months or sooner if further shocks`,
+    provider:'Dr. Chen', patient:'G.B. (de-identified)', date:'05/01/2026', type:'Outpatient clinic visit'
+  },
+  'ENT': {
+    note: `Patient is a 54M with 8-month history of progressive hoarseness and mild dysphagia to solids. No odynophagia. 45 pack-year smoking history, quit 2 years ago. Works in chemical plant with occasional fume exposure.
+
+PMH: GERD — on PPI 2 years, HTN, no prior head/neck surgery.
+
+Flexible laryngoscopy performed today: Irregular, exophytic lesion right true vocal cord approximately 1.5cm. Right cord mobility slightly impaired — full abduction/adduction but slower than left. Left cord normal. Supraglottis and subglottis clear. No neck lymphadenopathy palpable.
+
+CT neck with contrast (ordered last week, results pending).
+
+Voice quality: dysphonic, rough quality. Pitch breaks noted.
+
+Assessment:
+1. Right true vocal cord lesion — suspicious for malignancy
+2. Vocal cord hypomobility, right
+3. Hoarseness
+4. GERD
+
+Plan:
+- Direct laryngoscopy with biopsy right vocal cord scheduled
+- CT neck with contrast — ordered, pending
+- Smoking cessation reinforced
+- Speech therapy referral for voice preservation
+- Tumor board referral if malignancy confirmed
+- NPO after midnight — pre-op instructions given`,
+    provider:'Dr. Kim', patient:'P.L. (de-identified)', date:'05/01/2026', type:'Outpatient clinic visit'
+  },
+  'OB/GYN': {
+    note: `Patient is a 39F G2P2 presenting for evaluation of symptomatic uterine fibroids. Reports heavy menstrual bleeding x 18 months — soaking 8-10 pads/day, passing clots. Significant pelvic pressure. Urinary frequency. Dysmenorrhea 8/10. Missing 2-3 days of work per cycle.
+
+PMH: Iron deficiency anemia (Hgb 9.2 on labs 2 weeks ago — on ferrous sulfate), HTN, no prior GYN surgery.
+
+Conservative treatment tried: Hormonal IUD (Mirena) placed 14 months ago, removed at 6 months due to expulsion. Tranexamic acid 1300mg TID x 3 cycles — bleeding minimally improved. Norethindrone 5mg daily x 4 months — mood side effects, discontinued. NSAIDs — inadequate dysmenorrhea control.
+
+Pelvic ultrasound (3 weeks ago): Uterus 16-week size. Dominant intramural fibroid 6.8cm posterior uterine wall. Multiple smaller fibroids (3.2cm, 2.1cm). Normal ovaries bilaterally.
+
+Exam: Uterus enlarged to 16-week size, irregular contour. No adnexal tenderness. No cervical motion tenderness.
+
+Assessment:
+1. Symptomatic uterine leiomyomata — multiple, dominant 6.8cm
+2. Menorrhagia with iron deficiency anemia
+3. Failed multiple conservative treatments
+
+Plan:
+- Request authorization for laparoscopic hysterectomy with bilateral salpingectomy
+- Continue ferrous sulfate — recheck Hgb pre-op
+- GnRH agonist (leuprolide) x 2 months pre-op to reduce fibroid size
+- Pre-op labs and anesthesia consult ordered
+- Patient declines UAE — discussed risks/benefits of surgical vs non-surgical options`,
+    provider:'Dr. Santos', patient:'M.A. (de-identified)', date:'05/01/2026', type:'Outpatient clinic visit'
+  },
+  'Pulmonology': {
+    note: `Patient is a 71M with severe COPD (FEV1 38% predicted, GOLD Stage III) presenting for follow-up. Reports increased dyspnea over past 3 weeks — now SOB with minimal exertion. Increased sputum production, yellowish. One exacerbation requiring oral steroids 6 weeks ago. SpO2 at home 88-90% on 2L O2 (home O2 started 4 months ago).
+
+PMH: COPD, 55 pack-year history (quit 5 years ago), HTN, GERD, OSA on CPAP.
+
+Current medications: Tiotropium 18mcg daily, fluticasone/salmeterol 500/50 BID, albuterol rescue PRN (using 4-5x daily), prednisone 40mg taper (day 8 of 14), doxycycline just completed 5-day course.
+
+Exam: HR 96, RR 22, BP 134/86, SpO2 91% on 3L NC (increased from home 2L). Barrel chest. Prolonged expiration. Scattered expiratory wheezes bilateral, worse right base. No accessory muscle use at rest.
+
+CXR today: Hyperinflation. No acute infiltrate. No pneumothorax.
+
+Spirometry last visit: FEV1 38%, FVC 61%, FEV1/FVC 0.52.
+
+Assessment:
+1. COPD acute exacerbation — on treatment, partial response
+2. Hypoxic respiratory failure — supplemental O2 dependent
+3. OSA
+4. GERD
+
+Plan:
+- Continue prednisone taper
+- Add azithromycin 250mg daily x 5 days — bacterial exacerbation
+- Increase home O2 to 2.5L at rest, 4L with exertion
+- Pulmonary rehab referral
+- COPD education — action plan reviewed
+- Consider roflumilast if frequent exacerbations continue
+- Follow up 3 weeks`,
+    provider:'Dr. Moore', patient:'H.C. (de-identified)', date:'05/01/2026', type:'Outpatient clinic visit'
+  },
+  'Emergency Medicine': {
+    note: `Patient is a 34F presenting to ED with sudden onset right-sided pleuritic chest pain and dyspnea x 4 hours. Pain worsens with inspiration, 7/10. Associated mild cough, no hemoptysis. No fever. Recently returned from 12-hour flight from Japan 4 days ago. On oral contraceptive pills x 2 years. No prior DVT or PE.
+
+PMH: Migraine, OCP use. No prior clotting events. Family history: mother had DVT.
+
+Exam: HR 114, BP 108/70, RR 22, Temp 37.1, SpO2 94% RA. Anxious appearing. Tachycardic, regular. Mild respiratory distress. Right lower lobe decreased breath sounds. No leg swelling or tenderness.
+
+EKG: Sinus tachycardia. S1Q3T3 pattern.
+
+Labs: D-dimer 4,800 ng/mL (markedly elevated). Troponin 0.04 (mildly elevated). BNP 180. CBC/BMP within normal limits.
+
+Right lower extremity Doppler: Right popliteal vein DVT confirmed.
+
+CT-PA: Bilateral pulmonary emboli — right main pulmonary artery and right lower lobe segmental branches. Mild RV dilation noted. No RV strain on CT.
+
+Wells score: 7.5 — high probability.
+
+Assessment:
+1. Acute bilateral pulmonary embolism with RV involvement (submassive PE)
+2. Right popliteal DVT
+3. Hemodynamic stability maintained
+
+Plan:
+- Anticoagulation: heparin drip initiated — transition to apixaban
+- Cardiology consult for submassive PE — RV function monitoring
+- Hematology consult — hypercoagulable workup given young age, family history
+- Discontinue OCP
+- Admit to telemetry
+- Repeat echo in 24 hours to assess RV recovery
+- VTE education and discharge planning`,
+    provider:'Dr. Johnson', patient:'S.K. (de-identified)', date:'05/01/2026', type:'ED visit'
+  },
+  'Pain Management / Spine': {
+    note: `Patient is a 52M with chronic low back pain and right leg radiculopathy presenting for epidural steroid injection. Underwent L4-L5 microdiscectomy in 2023 — partial improvement post-op but residual right leg pain and numbness persisted. Now presenting with recurrent symptoms over 6 months.
+
+Pain: LBP 5/10 at rest, 7/10 with sitting >30 min. Right leg shooting pain from posterior hip to right foot, 6/10. Numbness right L5 distribution (dorsum of foot). Sleep mildly disrupted.
+
+PMH: Diabetes Type 2 (HbA1c 7.8 last month), HTN, post-op L4-L5 discectomy 2023.
+
+Conservative tx: PT 8 weeks x 2x/week — completed, partial improvement. Gabapentin 600mg TID x 3 months — partial neuropathic pain relief. Meloxicam 15mg daily — GI intolerance, discontinued. Epidural steroid injection L4-L5 right (6 months ago) — 60% relief for 3 months, now recurred.
+
+MRI lumbar spine (4 weeks ago): Post-surgical changes L4-L5. Recurrent/residual right paracentral disc protrusion with moderate right foraminal stenosis and right L5 nerve root impingement.
+
+Exam: Antalgic gait mild. Lumbar flexion 60% normal. Positive SLR right at 50 degrees (reproducing right leg symptoms). Sensation decreased right L5 dermatome. EHL strength 4+/5 right.
+
+Assessment:
+1. Recurrent right L5 radiculopathy
+2. L4-L5 disc herniation with right foraminal stenosis — post-surgical
+3. Lumbar post-laminectomy syndrome
+4. Diabetes
+
+Plan:
+- Lumbar epidural steroid injection L4-L5 right transforaminal, fluoroscopy-guided — to be performed today under fluoroscopy with contrast confirmation
+- Continue gabapentin
+- Continue PT home exercise program
+- Consider spinal cord stimulator trial if <50% relief from current injection
+- Follow up 6 weeks`,
+    provider:'Dr. Nguyen', patient:'R.J. (de-identified)', date:'05/01/2026', type:'Outpatient clinic visit'
+  },
+  'Oncology': {
+    note: `Patient is a 62F with stage IIIA non-small cell lung cancer (adenocarcinoma, right upper lobe) presenting for cycle 3 of carboplatin/pemetrexed chemotherapy. EGFR wild type, ALK negative, PD-L1 TPS 72%.
+
+Tolerating treatment reasonably well. Reports fatigue 6/10, mild nausea controlled with ondansetron. No significant peripheral neuropathy. Appetite reduced — down 3kg since cycle 1. No fever or infection signs.
+
+PMH: NSCLC diagnosed 3 months ago, HTN, GERD. Former smoker 30 pack-years, quit at diagnosis. ECOG PS 1.
+
+Prior treatment: Cycle 1 (carboplatin AUC5 + pemetrexed 500mg/m2) — tolerated, grade 1 fatigue. Cycle 2 — same, grade 2 fatigue, grade 1 nausea.
+
+Restaging CT after cycle 2: Primary tumor reduced from 4.2cm to 2.8cm (33% reduction). N2 lymph nodes reduced. Partial response per RECIST 1.1.
+
+Labs today: WBC 3.8, ANC 2,100, Hgb 10.2, Plt 142K, Cr 0.9, ALT 32.
+
+Exam: Comfortable, ECOG 1. No lymphadenopathy. Lungs: reduced right upper lobe breath sounds. No clubbing. Wt 61kg (down 3kg from baseline 64kg).
+
+Assessment:
+1. NSCLC stage IIIA adenocarcinoma — partial response to chemotherapy
+2. Chemotherapy-induced anemia (Hgb 10.2)
+3. Decreased oral intake / weight loss — cancer-related
+4. Fatigue
+
+Plan:
+- Proceed with cycle 3 carboplatin/pemetrexed — ANC adequate
+- Nutritional consult for weight loss management
+- Folic acid and B12 supplementation — continue with pemetrexed
+- Antiemetic prophylaxis: ondansetron + dexamethasone pre-chemo
+- Discuss maintenance pemetrexed + pembrolizumab after 4-6 cycles given high PD-L1
+- Palliative care consult for symptom management
+- Follow up next cycle`,
+    provider:'Dr. Williams', patient:'L.T. (de-identified)', date:'05/01/2026', type:'Outpatient clinic visit'
+  },
+  'Internal Medicine': {
+    note: `Patient is a 58F presenting for follow-up of acute decompensated heart failure. She reports dyspnea at rest, 2-pillow orthopnea, bilateral leg swelling. Weight up 6kg from dry weight. BNP on admission was 4,200. Echo last week: LVEF 28%, dilated LV, no significant valvular disease.
+
+PMH: Hypertension, Type 2 diabetes, CKD (last creatinine 1.9, GFR 38).
+
+Exam: HR 94, BP 148/88, SpO2 93% on 2L NC. JVD present. Bibasilar crackles. 3+ pitting edema bilateral lower extremities.
+
+Labs today: BNP 1,840. Cr 2.2 (baseline 1.9). Glucose 186. HbA1c due.
+
+Assessment:
+1. Acute decompensated heart failure
+2. Hypertension
+3. Diabetes
+4. CKD
+5. AKI
+
+Plan:
+- Continue IV Lasix 80mg BID
+- Echo ordered to reassess EF
+- Nephrology consult for AKI management
+- Hold metformin given AKI
+- Continue sacubitril/valsartan`,
+    provider:'Dr. Patel', patient:'R.M. (de-identified)', date:'05/01/2026', type:'Inpatient progress note'
+  }
+};
+
+function loadExample(){
+  const specialty = document.getElementById('enc-specialty').value;
+  const ex = EXAMPLES[specialty] || EXAMPLES['Hospitalist'];
+  document.getElementById('transcript').value = ex.note;
+  if(ex.provider) document.getElementById('enc-provider').value = ex.provider;
+  if(ex.patient)  document.getElementById('enc-patient').value  = ex.patient;
+  if(ex.date)     document.getElementById('enc-date').value     = ex.date;
+  if(ex.type)     document.getElementById('enc-type').value     = ex.type;
+}
+
+function clearTranscript(){ document.getElementById('transcript').value = ''; }
+
+// ── Tab switching ─────────────────────────────────────────────────────────
+function switchTab(name, btn){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+}
+
+// ── Note editor ───────────────────────────────────────────────────────────
+function showNote(html){
+  document.getElementById('note-placeholder').style.display='none';
+  const ed = document.getElementById('note-editor');
+  ed.style.display='block';
+  ed.innerHTML = html;
+  updateWordCount();
+}
+
+function updateWordCount(){
+  const ed = document.getElementById('note-editor');
+  const words = (ed.innerText||'').trim().split(/\s+/).filter(Boolean).length;
+  document.getElementById('note-word-count').textContent = words ? words+' words' : '';
+}
+
+function copyNote(){
+  const ed = document.getElementById('note-editor');
+  navigator.clipboard.writeText(ed.innerText||'').then(()=>{
+    const btn = event.target;
+    btn.textContent='Copied!';
+    setTimeout(()=>btn.textContent='Copy note',1500);
+  });
+}
+
+// ── Agent progress ────────────────────────────────────────────────────────
+const AGENTS = [
+  {id:'orch',    label:'Orchestrator'},
+  {id:'graph',   label:'Evidence graph'},
+  {id:'soap',    label:'SOAP validate'},
+  {id:'cdi',     label:'CDI'},
+  {id:'mdm',     label:'E/M MDM'},
+  {id:'spec',    label:'Specificity'},
+  {id:'wc',      label:'WC report'},
+  {id:'pa',      label:'Prior auth'},
+  {id:'orders',  label:'Orders'},
+  {id:'summary', label:'Note draft'},
+  {id:'qa',      label:'QA'},
+];
+
+function initProgress(){
+  const bar = document.getElementById('agent-progress');
+  bar.classList.add('visible');
+  const steps = document.getElementById('agent-steps');
+  steps.innerHTML = AGENTS.map(a=>
+    `<div class="agent-step" id="step-${a.id}"><div class="sdot"></div>${a.label}</div>`
+  ).join('');
+}
+
+function setStep(id, state){ // 'running'|'done'|'error'
+  const el = document.getElementById('step-'+id);
+  if(el){ el.className='agent-step '+state; }
+}
+
+// ── Status helpers ────────────────────────────────────────────────────────
+function setStatus(text, cls){
+  const el = document.getElementById('run-status');
+  el.textContent=text;
+  el.className='status-pill '+cls;
+}
+
+// ── Main orchestration ────────────────────────────────────────────────────
+async function runEncounter(){
+  const note = document.getElementById('transcript').value.trim();
+  if(!note){ alert('Paste a transcript first.'); return; }
+
+  const specialty = document.getElementById('enc-specialty').value;
+  const patient   = document.getElementById('enc-patient').value || 'Patient';
+  const visitType = document.getElementById('enc-type').value;
+  const provider  = document.getElementById('enc-provider').value || 'Provider';
+
+  document.getElementById('run-btn').disabled=true;
+  setStatus('Running…','pill-running');
+  initProgress();
+  setStep('orch','running');
+
+  // Reset panels
+  document.getElementById('quality-empty').style.display='flex';
+  document.getElementById('quality-content').style.display='none';
+  document.getElementById('cdi-empty').style.display='flex';
+  document.getElementById('cdi-content').style.display='none';
+  document.getElementById('wc-empty').style.display='flex';
+  document.getElementById('wc-content').style.display='none';
+  document.getElementById('pa-empty').style.display='flex';
+  document.getElementById('pa-content').style.display='none';
+  document.getElementById('orders-empty').style.display='flex';
+  document.getElementById('orders-content').style.display='none';
+  document.getElementById('tab-wc').style.display='none';
+  document.getElementById('tab-pa').style.display='none';
+  document.getElementById('cdi-count').style.display='none';
+  document.getElementById('orders-count').style.display='none';
+  document.getElementById('soap-card').style.display='none';
+  document.getElementById('mdm-card').style.display='none';
+
+  window._encData = { note, specialty, patient, visitType, provider, results:{} };
+
+  try {
+    // ── Step 1: Orchestrator ──
+    const orchResult = await runOrchestrator(note, specialty, visitType, patient);
+    setStep('orch','done'); setStep('graph','running');
+
+    // ── Step 2: Evidence graph ──
+    const graph = await runEvidenceGraph(note, specialty);
+    setStep('graph','done');
+
+    // ── Step 3-9: Parallel agents ──
+    const tasks = [
+      runSOAPValidation(note, specialty),
+      runCDIAnalysis(note, specialty, graph),
+      runMDMScore(note, specialty),
+      runSpecificityCheck(note, specialty),
+      orchResult.run_wc ? runWCReport(note, orchResult, specialty, patient) : Promise.resolve(null),
+      orchResult.run_pa && orchResult.pa_items?.length ? runPriorAuth(note, orchResult, specialty) : Promise.resolve(null),
+      runOrderGeneration(note, specialty),
+      runNoteDraft(note, specialty, provider, visitType),
+    ];
+
+    const [soapRes, cdiRes, mdmRes, specRes, wcRes, paRes, ordersRes, noteRes] = await Promise.all(tasks);
+    window._encData.results = { soap:soapRes, cdi:cdiRes, mdm:mdmRes, spec:specRes, wc:wcRes, pa:paRes, orders:ordersRes, note:noteRes };
+
+    // ── Step 10: QA ──
+    setStep('qa','running');
+    const qaRes = await runQualityCheck(window._encData.results, specialty);
+    setStep('qa','done');
+
+    // ── Render all panels ──
+    renderQualityPanel(qaRes, soapRes, mdmRes);
+    renderCDIPanel(cdiRes, specRes);
+    if(wcRes) renderWCPanel(wcRes, orchResult);
+    if(paRes) renderPAPanel(paRes, orchResult);
+    renderOrdersPanel(ordersRes);
+    if(noteRes) showNote(formatNote(noteRes));
+
+    setStatus('Complete','pill-done');
+
+  } catch(e) {
+    setStatus('Error','pill-error');
+    console.error(e);
+  } finally {
+    document.getElementById('run-btn').disabled=false;
+  }
+}
+
+// ── Individual agents ─────────────────────────────────────────────────────
+async function runOrchestrator(note, specialty, visitType, patient){
+  const sys = `You are the orchestrator agent. Analyze the encounter and return ONLY valid JSON:
+{"run_cdi":boolean,"run_wc":boolean,"wc_report_type":"pr1"|"pr2"|"pr4"|null,"wc_doi":string|null,"wc_employer":string|null,"wc_claim":string|null,"run_pa":boolean,"pa_items":[{"procedure":string,"payer":string,"dx":string}],"billing_type":"em_office"|"em_inpatient"|"ed"|"procedure","run_orders":boolean,"clinical_context":string,"reasoning":string}
+Rules: run_wc=true if work injury/employer/DOI/claim mentioned. run_pa=true if procedures needing auth present. billing_type from context.`;
+  const raw = await claude(sys, `Visit: ${visitType}\nSpecialty: ${specialty}\nPatient: ${patient}\n\nNote:\n${note}`, 600);
+  try{ return JSON.parse(raw.replace(/```json|```/g,'').trim()); }
+  catch{ return {run_cdi:true,run_wc:false,run_pa:false,billing_type:'em_office',run_orders:true}; }
+}
+
+async function runEvidenceGraph(note, specialty){
+  setStep('graph','running');
+  const sys = `Extract structured entities and relations from this clinical note. Return ONLY valid JSON:
+{"entities":[{"id":"e1","type":"problem|symptom|exam_finding|lab|imaging|medication|procedure|order|vital","value":"normalized value","section":"subjective|objective|assessment|plan","confidence":0.95}],"relations":[{"source_id":"e1","target_id":"e2","type":"supports|planned_for|failed_tx_for|monitors","evidence":"brief text"}]}
+Extract ALL diagnoses, ALL supporting labs/vitals/exam findings, ALL plan orders, and link them with relations.`;
+  try{
+    const raw = await claude(sys, `Specialty: ${specialty}\nNote:\n${note}`, 1200);
+    return JSON.parse(raw.replace(/```json|```/g,'').trim());
+  }catch{ return {entities:[],relations:[]}; }
+}
+
+async function runSOAPValidation(note, specialty){
+  setStep('soap','running');
+  const sys = `You are a SOAP validation specialist using the AMBCI 25-point billing proof map. Return ONLY valid JSON:
+{"overall_score":integer,"billing_risk":"low"|"medium"|"high"|"critical","ready_to_code":boolean,"critical_fixes":[string],"denial_risk_flags":[string],"estimated_em_level":string,"plan_problem_mismatches":[string],"orders_missing_rationale":[string]}`;
+  try{
+    const raw = await claude(sys, `Specialty: ${specialty}\nNote:\n${note}`, 800);
+    const res = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    setStep('soap','done'); return res;
+  }catch{ setStep('soap','error'); return null; }
+}
+
+async function runCDIAnalysis(note, specialty, graph){
+  setStep('cdi','running');
+  const graphCtx = graph && graph.entities?.length
+    ? `EVIDENCE GRAPH (${graph.entities.length} entities, ${graph.relations?.length||0} relations):\n${JSON.stringify(graph,null,1).slice(0,800)}\n\n`
+    : '';
+  const sys = `You are a senior CDI specialist using FY2026 ICD-10-CM guidelines for ${specialty}. Return ONLY a valid JSON array of CDI flags:
+[{"type":"critical"|"warning"|"suggestion","title":string,"body":string,"drg_impact":string|null,"current_code":string|null,"suggested_codes":[{"code":string,"description":string}],"confidence":integer,"evidence_found":[string],"evidence_missing":[string]}]
+Max 8 flags. Prioritize by revenue impact. Use the evidence graph if provided to identify unsupported diagnoses.`;
+  try{
+    const raw = await claude(sys, `${graphCtx}Specialty: ${specialty}\nNote:\n${note}`, 1800);
+    const flags = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    setStep('cdi','done'); return flags;
+  }catch{ setStep('cdi','error'); return []; }
+}
+
+async function runMDMScore(note, specialty){
+  setStep('mdm','running');
+  const sys = `Score this note against AMA 2023 E/M MDM guidelines. Return ONLY valid JSON:
+{"predicted_em_level":string,"predicted_complexity":"straightforward"|"low"|"moderate"|"high","mdm_elements":{"problems_addressed":{"score":string,"documentation_gap":string|null},"data_reviewed":{"score":string,"documentation_gap":string|null},"risk":{"score":string,"documentation_gap":string|null}},"upgrade_path":string,"downcode_risk":boolean,"missing_to_support_level":[string]}`;
+  try{
+    const raw = await claude(sys, `Specialty: ${specialty}\nNote:\n${note}`, 800);
+    const res = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    setStep('mdm','done'); return res;
+  }catch{ setStep('mdm','error'); return null; }
+}
+
+async function runSpecificityCheck(note, specialty){
+  setStep('spec','running');
+  const sys = `Check for vague diagnoses in this note that would resolve to unspecified ICD-10 codes. Return ONLY valid JSON:
+{"triggered":[{"diagnosis":string,"vague_term_found":string,"required_attributes":[string],"icd10_unspecified":string,"query_options":[string],"indicators_found":[string]}]}
+Focus on: CHF/HF, sepsis, AKI, anemia, pneumonia, COPD, diabetes, AFib, AMS/encephalopathy, malnutrition, CKD.`;
+  try{
+    const raw = await claude(sys, `Specialty: ${specialty}\nNote:\n${note}`, 800);
+    const res = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    setStep('spec','done'); return res;
+  }catch{ setStep('spec','error'); return {triggered:[]}; }
+}
+
+async function runWCReport(note, manifest, specialty, patient){
+  setStep('wc','running');
+  const rtype = manifest.wc_report_type || 'pr2';
+  const rtLabels = {pr1:'PR-1 Initial Report',pr2:'PR-2 Progress Report',pr4:'PR-4 MMI/P&S Report'};
+  const sys = `You are a California DWC workers compensation documentation specialist. Generate a complete ${rtLabels[rtype]} with all required sections. Be factual and specific. State causation to 'reasonable medical probability.' Include provider attestation section.`;
+  try{
+    const ctx = `Patient: ${patient}\nDOI: ${manifest.wc_doi||'See note'}\nEmployer: ${manifest.wc_employer||'See note'}\nClaim: ${manifest.wc_claim||'See note'}\nSpecialty: ${specialty}\n\nNote:\n${note}`;
+    const report = await claude(sys, ctx, 2000);
+    setStep('wc','done'); return {report_type:rtype, narrative:report};
+  }catch{ setStep('wc','error'); return null; }
+}
+
+async function runPriorAuth(note, manifest, specialty){
+  setStep('pa','running');
+  const item = manifest.pa_items?.[0] || {procedure:'procedure',payer:'payer',dx:'dx'};
+  const sys = `You are a prior authorization specialist for ${specialty}. Write a compelling prior authorization letter to ${item.payer} for ${item.procedure}. Include: clinical summary, step therapy/failed conservative care, specific clinical findings, evidence-based guidelines, and closing requesting review. Be specific and factual.`;
+  try{
+    const letter = await claude(sys, `Procedure: ${item.procedure}\nPayer: ${item.payer}\nDx: ${item.dx}\n\nClinical notes:\n${note}`, 1600);
+    setStep('pa','done'); return {procedure:item.procedure, payer:item.payer, letter};
+  }catch{ setStep('pa','error'); return null; }
+}
+
+async function runOrderGeneration(note, specialty){
+  setStep('orders','running');
+  const sys = `You are a clinical order management agent for ${specialty}. Extract all orders from the plan section and identify any implied orders. Return ONLY valid JSON:
+{"orders":[{"category":"lab"|"imaging"|"referral"|"medication"|"therapy"|"procedure"|"follow_up","order":string,"indication":string,"priority":"routine"|"urgent"|"stat","medical_necessity":string,"needs_auth":boolean}],"missing_orders":[string],"summary":string}`;
+  try{
+    const raw = await claude(sys, `Specialty: ${specialty}\nNote:\n${note}`, 1200);
+    const res = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    setStep('orders','done'); return res;
+  }catch{ setStep('orders','error'); return {orders:[],missing_orders:[]}; }
+}
+
+async function runNoteDraft(note, specialty, provider, visitType){
+  setStep('summary','running');
+  const sys = `You are a medical scribe for ${specialty}. Generate a clean, complete SOAP note from the encounter information provided. Format with clear section headers (SUBJECTIVE:, OBJECTIVE:, ASSESSMENT:, PLAN:). Be specific, clinically accurate, and use appropriate medical terminology. Include all diagnoses with supporting evidence. Do not use placeholder brackets.`;
+  try{
+    const draft = await claude(sys, `Provider: ${provider}\nSpecialty: ${specialty}\nVisit type: ${visitType}\n\nEncounter notes:\n${note}`, 1600);
+    setStep('summary','done'); return draft;
+  }catch{ setStep('summary','error'); return null; }
+}
+
+async function runQualityCheck(results, specialty){
+  setStep('qa','running');
+  const summary = {
+    cdi_flags: results.cdi?.length||0,
+    soap_score: results.soap?.overall_score||0,
+    mdm_level: results.mdm?.predicted_em_level||'unknown',
+    spec_issues: results.spec?.triggered?.length||0,
+    orders: results.orders?.orders?.length||0,
+  };
+  const sys = `You are a QA agent. Return ONLY valid JSON:
+{"overall_score":integer,"ready_to_submit":boolean,"critical_issues":[string],"recommendations":[string],"approval_status":{"cdi":"approved"|"needs_review","soap":"approved"|"needs_review","mdm":"approved"|"needs_review"},"summary_statement":string}`;
+  try{
+    const raw = await claude(sys, `Specialty: ${specialty}\nAgent summary: ${JSON.stringify(summary)}\nSOAP score: ${results.soap?.overall_score}\nCDI flags: ${results.cdi?.length}\nE/M predicted: ${results.mdm?.predicted_em_level}`, 600);
+    return JSON.parse(raw.replace(/```json|```/g,'').trim());
+  }catch{ return {overall_score:70,ready_to_submit:false,critical_issues:[],recommendations:[],summary_statement:'Review complete.'}; }
+}
+
+// ── Panel renderers ───────────────────────────────────────────────────────
+function renderQualityPanel(qa, soap, mdm){
+  document.getElementById('quality-empty').style.display='none';
+  document.getElementById('quality-content').style.display='block';
+
+  const score = qa?.overall_score || 0;
+  const ring = document.getElementById('quality-score-row');
+  const ringCls = score>=75?'high':score>=50?'med':'low';
+  ring.innerHTML = `
+    <div class="score-ring ${ringCls}">${score}</div>
+    <div class="score-detail">
+      <div class="score-label">${qa?.summary_statement||'QA complete'}</div>
+      <div style="font-size:11px;color:var(--muted);">${qa?.ready_to_submit?'✓ Ready to submit':'⚠ Review before submission'}</div>
+    </div>`;
+
+  const issues = document.getElementById('quality-issues');
+  const crits = qa?.critical_issues||[];
+  const recs = qa?.recommendations||[];
+  issues.innerHTML = '';
+  if(crits.length){
+    issues.innerHTML += crits.map(c=>`<div class="flag critical"><div class="flag-title">Critical</div><div class="flag-body">${c}</div></div>`).join('');
+  }
+  if(recs.length){
+    issues.innerHTML += recs.map(r=>`<div class="flag suggestion"><div class="flag-title">Recommendation</div><div class="flag-body">${r}</div></div>`).join('');
+  }
+
+  // SOAP card
+  if(soap){
+    document.getElementById('soap-card').style.display='block';
+    const soapEl = document.getElementById('soap-results');
+    soapEl.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <span style="font-size:13px;font-weight:700;">${soap.overall_score}/100</span>
+        <span class="label-chip" style="background:${soap.billing_risk==='critical'?'var(--red-lt)':soap.billing_risk==='high'?'var(--amber-lt)':'var(--green-lt)'};color:${soap.billing_risk==='critical'?'var(--red)':soap.billing_risk==='high'?'var(--amber)':'var(--green-dk)'}">${soap.billing_risk||''} risk</span>
+        <span style="font-size:11px;color:var(--muted);margin-left:auto;">${soap.estimated_em_level||''}</span>
+      </div>
+      ${(soap.critical_fixes||[]).map(f=>`<div class="flag warning"><div class="flag-body">${f}</div></div>`).join('')}
+      ${(soap.denial_risk_flags||[]).map(f=>`<div class="flag critical"><div class="flag-body">${f}</div></div>`).join('')}
+    `;
+  }
+
+  // MDM card
+  if(mdm){
+    document.getElementById('mdm-card').style.display='block';
+    const mdmEl = document.getElementById('mdm-results');
+    const elems = mdm.mdm_elements||{};
+    mdmEl.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+        <span style="font-size:15px;font-weight:700;color:var(--green);">${mdm.predicted_em_level||''}</span>
+        <span style="font-size:11px;color:var(--muted);">${mdm.predicted_complexity||''} complexity</span>
+        ${mdm.downcode_risk?'<span class="label-chip" style="background:var(--red-lt);color:var(--red);margin-left:auto;">⚠ Downcode risk</span>':''}
+      </div>
+      ${['problems_addressed','data_reviewed','risk'].map(k=>{
+        const el = elems[k]||{};
+        return `<div class="sbar" style="margin-bottom:6px;">
+          <div style="font-size:10px;color:var(--muted);width:120px;flex-shrink:0;">${k.replace(/_/g,' ')}</div>
+          <div style="font-size:11px;font-weight:500;color:var(--text);">${el.score||'—'}</div>
+          ${el.documentation_gap?`<div style="font-size:10px;color:var(--amber);margin-left:8px;">⚠ ${el.documentation_gap}</div>`:''}
+        </div>`;
+      }).join('')}
+      ${mdm.upgrade_path?`<div style="margin-top:8px;font-size:11px;color:var(--muted);padding:8px;background:var(--green-lt);border-radius:6px;"><strong style="color:var(--green-dk);">Upgrade path:</strong> ${mdm.upgrade_path}</div>`:''}
+    `;
+  }
+}
+
+function renderCDIPanel(flags, spec){
+  const allFlags = flags||[];
+  const specItems = spec?.triggered||[];
+
+  if(!allFlags.length && !specItems.length){
+    document.getElementById('cdi-empty').style.display='flex';
+    return;
+  }
+
+  document.getElementById('cdi-empty').style.display='none';
+  document.getElementById('cdi-content').style.display='block';
+
+  const count = allFlags.length + specItems.length;
+  const cc = document.getElementById('cdi-count');
+  cc.style.display='inline';
+  cc.textContent = count;
+  cc.className = 'tab-count' + (allFlags.some(f=>f.type==='critical')?' red':'');
+
+  let html = '';
+
+  // Specificity issues first
+  if(specItems.length){
+    html += `<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--amber);margin-bottom:8px;margin-top:4px;">Specificity gaps</div>`;
+    html += specItems.map(s=>`
+      <div class="flag warning">
+        <div class="flag-title">${s.diagnosis}</div>
+        <div class="flag-body">Vague term: "${s.vague_term_found}" → requires: ${s.required_attributes?.join(', ')}</div>
+        <div class="flag-codes">
+          <span class="code-chip">Unspecified: ${s.icd10_unspecified||'—'}</span>
+          ${(s.indicators_found||[]).map(i=>`<span class="code-chip">✓ ${i}</span>`).join('')}
+        </div>
+      </div>`).join('');
+  }
+
+  // CDI flags
+  if(allFlags.length){
+    html += `<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:8px;margin-top:${specItems.length?12:4}px;">CDI analysis</div>`;
+    html += allFlags.map(f=>`
+      <div class="flag ${f.type}">
+        <div style="display:flex;align-items:flex-start;gap:6px;">
+          <div class="flag-title" style="flex:1">${f.title}</div>
+          <span class="flag-conf">${f.confidence||0}%</span>
+        </div>
+        <div class="flag-body">${f.body}</div>
+        ${f.drg_impact?`<div style="font-size:10px;color:var(--purple);margin-top:4px;font-weight:600;">DRG: ${f.drg_impact}</div>`:''}
+        <div class="flag-codes">
+          ${(f.suggested_codes||[]).map(c=>`<span class="code-chip">${c.code} ${c.description}</span>`).join('')}
+        </div>
+        ${f.evidence_missing?.length?`<div style="font-size:10px;color:var(--red);margin-top:4px;">Missing: ${f.evidence_missing.join(' · ')}</div>`:''}
+      </div>`).join('');
+  }
+
+  document.getElementById('cdi-content').innerHTML = html;
+}
+
+function renderWCPanel(wc, manifest){
+  if(!wc) return;
+  document.getElementById('tab-wc').style.display='';
+  document.getElementById('wc-empty').style.display='none';
+  document.getElementById('wc-content').style.display='block';
+  const labels = {pr1:'PR-1 Initial Report',pr2:'PR-2 Progress Report',pr4:'PR-4 MMI / P&S Report'};
+  document.getElementById('wc-content').innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+      <span style="font-size:12px;font-weight:700;">${labels[wc.report_type]||wc.report_type}</span>
+      <button class="btn btn-ghost" style="font-size:10px;padding:3px 8px;margin-left:auto" onclick="copyWC()">Copy</button>
+    </div>
+    <textarea class="doc-edit" id="wc-doc" rows="18">${wc.narrative||''}</textarea>
+  `;
+}
+
+function copyWC(){
+  const el = document.getElementById('wc-doc');
+  if(el) navigator.clipboard.writeText(el.value);
+}
+
+function renderPAPanel(pa, manifest){
+  if(!pa) return;
+  document.getElementById('tab-pa').style.display='';
+  document.getElementById('pa-empty').style.display='none';
+  document.getElementById('pa-content').style.display='block';
+  document.getElementById('pa-content').innerHTML = `
+    <div style="font-size:12px;font-weight:700;margin-bottom:4px;">${pa.procedure||''}</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">To: ${pa.payer||''}</div>
+    <textarea class="doc-edit" id="pa-doc" rows="18">${pa.letter||''}</textarea>
+    <div style="margin-top:8px;display:flex;gap:6px;">
+      <button class="btn btn-ghost" style="font-size:10px" onclick="navigator.clipboard.writeText(document.getElementById('pa-doc').value)">Copy letter</button>
+    </div>
+  `;
+}
+
+function renderOrdersPanel(orders){
+  const all = orders?.orders||[];
+  const missing = orders?.missing_orders||[];
+
+  if(!all.length && !missing.length){
+    document.getElementById('orders-empty').style.display='flex';
+    return;
+  }
+
+  document.getElementById('orders-empty').style.display='none';
+  document.getElementById('orders-content').style.display='block';
+
+  const oc = document.getElementById('orders-count');
+  oc.style.display='inline'; oc.textContent=all.length;
+
+  let html = '';
+  if(orders?.summary) html += `<div style="font-size:11px;color:var(--muted);margin-bottom:10px;padding:8px;background:var(--surface);border-radius:6px;border:1px solid var(--border)">${orders.summary}</div>`;
+
+  if(all.length){
+    html += `<div class="card"><div class="card-body" style="padding:0;">`;
+    html += all.map(o=>`
+      <div class="order-item">
+        <span class="order-cat ${o.category||'procedure'}">${o.category||'order'}</span>
+        <div class="order-body">
+          <div class="order-name">${o.order}</div>
+          <div class="order-indication">${o.indication||''}</div>
+          ${o.needs_auth?'<div class="order-flag">⚠ May need prior auth</div>':''}
+        </div>
+        <span style="font-size:9px;color:var(--hint);flex-shrink:0;margin-top:2px;">${o.priority||''}</span>
+      </div>`).join('');
+    html += `</div></div>`;
+  }
+
+  if(missing.length){
+    html += `<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--amber);margin-bottom:6px;margin-top:4px;">Implied orders not in plan</div>`;
+    html += missing.map(m=>`<div class="flag warning"><div class="flag-body">${m}</div></div>`).join('');
+  }
+
+  document.getElementById('orders-content').innerHTML = html;
+}
+
+function formatNote(raw){
+  // Convert plain text SOAP note to styled HTML
+  const sections = {'SUBJECTIVE:':'Subjective','OBJECTIVE:':'Objective','ASSESSMENT:':'Assessment','PLAN:':'Plan'};
+  let html = raw;
+  Object.entries(sections).forEach(([key,label])=>{
+    html = html.replace(new RegExp(key,'gi'), `<div class="note-section"><span class="note-label">${label}</span><div class="note-content">`);
+  });
+  // Close all sections roughly
+  html = html.replace(/(<div class="note-section">.*?)(?=<div class="note-section">|$)/gs, '$1</div></div>');
+  return `<div style="padding:24px 32px;font-family:var(--font-note);font-size:14px;line-height:1.85">${html}</div>`;
+}
+
+// ── Export as .docx ──────────────────────────────────────────────────────
+// Uses docx.js loaded from CDN
+function loadDocxLib(){
+  return new Promise((res,rej)=>{
+    if(window.docx){ res(); return; }
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/docx/8.2.2/docx.umd.min.js';
+    s.onload = res; s.onerror = rej;
+    document.head.appendChild(s);
+  });
+}
+
+async function exportPackage(){
+  const d = window._encData;
+  if(!d){ alert('Run an encounter first.'); return; }
+
+  const btn = document.querySelector('.btn-ghost[onclick="exportPackage()"]');
+  if(btn){ btn.textContent = '⏳ Generating...'; btn.disabled = true; }
+
+  try {
+    await loadDocxLib();
+    const {
+      Document, Packer, Paragraph, TextRun, HeadingLevel,
+      AlignmentType, BorderStyle, WidthType, ShadingType, LevelFormat, PageBreak
+    } = window.docx;
+
+    const date  = document.getElementById('enc-date').value || new Date().toLocaleDateString();
+    const noteEl = document.getElementById('note-editor');
+    const noteText = noteEl?.innerText || '';
+    const wcText = document.getElementById('wc-doc')?.value || '';
+    const paText = document.getElementById('pa-doc')?.value || '';
+
+    const mkPara = (text, opts={}) => new Paragraph({
+      spacing:{before:60,after:100},
+      children:[new TextRun({text, size:opts.size||22, font:'Arial',
+        bold:opts.bold, color:opts.color||'1A1A18', italics:opts.italics})]
+    });
+    const mkH = (text, level=1) => new Paragraph({
+      heading: level===1?HeadingLevel.HEADING_1:HeadingLevel.HEADING_2,
+      spacing:{before:320,after:160},
+      border: level===1?{bottom:{style:BorderStyle.SINGLE,size:8,color:'1D9E75',space:4}}:undefined,
+      children:[new TextRun({text, bold:true, size:level===1?36:28, font:'Arial',
+        color:level===1?'1A1A18':'1D9E75'})]
+    });
+    const mkDiv = ()=>new Paragraph({
+      spacing:{before:160,after:160},
+      border:{bottom:{style:BorderStyle.SINGLE,size:4,color:'E0DFDB',space:1}},children:[]
+    });
+    const pb = ()=>new Paragraph({children:[new PageBreak()]});
+
+    // Convert note text to paragraphs preserving sections
+    const noteParas = noteText.split('\n').map(line=>{
+      if(!line.trim()) return new Paragraph({spacing:{before:40,after:40},children:[]});
+      const isSection = /^(SUBJECTIVE|OBJECTIVE|ASSESSMENT|PLAN|HPI|ROS|PMH|MEDICATIONS|ALLERGIES|EXAM|VITALS):/i.test(line.trim());
+      return new Paragraph({
+        spacing:{before: isSection?180:40, after:40},
+        children:[new TextRun({
+          text:line, font:'Palatino Linotype', size:22,
+          bold:isSection, color:isSection?'1D9E75':'1A1A18'
+        })]
+      });
+    });
+
+    const children = [
+      // Cover block
+      new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:0,after:40},
+        children:[new TextRun({text:'PHYSICIAN ASSIST',bold:true,size:48,font:'Arial',color:'1D9E75'})]}),
+      new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:0,after:80},
+        children:[new TextRun({text:'Encounter Documentation Package',size:28,font:'Arial',color:'6B6B67'})]}),
+      mkDiv(),
+      mkPara(`Provider: ${d.provider}   |   Specialty: ${d.specialty}   |   Patient: ${d.patient}`, {bold:false}),
+      mkPara(`Visit date: ${date}   |   Visit type: ${document.getElementById('enc-type').value||''}`, {color:'6B6B67'}),
+      mkPara('⚠  DEMO — No real PHI  |  Physician Assist  |  physician-assist.ai', {color:'DC2626', italics:true, size:18}),
+    ];
+
+    // SOAP Note
+    if(noteText.trim()){
+      children.push(pb(), mkH('SOAP Note'), ...noteParas);
+    }
+
+    // WC Report
+    if(wcText.trim()){
+      children.push(pb(), mkH('Workers Compensation Report'));
+      wcText.split('\n').forEach(line=>{
+        children.push(new Paragraph({
+          spacing:{before:40,after:40},
+          children:[new TextRun({text:line||' ', font:'Palatino Linotype', size:22, color:'1A1A18'})]
+        }));
+      });
+    }
+
+    // PA Letter
+    if(paText.trim()){
+      children.push(pb(), mkH('Prior Authorization Letter'));
+      paText.split('\n').forEach(line=>{
+        children.push(new Paragraph({
+          spacing:{before:40,after:40},
+          children:[new TextRun({text:line||' ', font:'Palatino Linotype', size:22, color:'1A1A18'})]
+        }));
+      });
+    }
+
+    // Footer
+    children.push(mkDiv(), new Paragraph({
+      alignment:AlignmentType.CENTER, spacing:{before:120},
+      children:[new TextRun({text:`Physician Assist  ·  Generated ${new Date().toLocaleString()}  ·  Review all outputs before EHR submission`,
+        size:18, font:'Arial', color:'ABABAA', italics:true})]
+    }));
+
+    const doc = new Document({
+      styles:{default:{document:{run:{font:'Arial',size:22}}}},
+      sections:[{
+        properties:{page:{size:{width:12240,height:15840},margin:{top:1080,right:1080,bottom:1080,left:1080}}},
+        children
+      }]
+    });
+
+    const buf = await Packer.toBuffer(doc);
+    const blob = new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    const safe = (d.patient||'patient').replace(/[^a-zA-Z0-9]/g,'_').slice(0,20);
+    a.download = `encounter_${safe}_${Date.now()}.docx`;
+    a.click(); URL.revokeObjectURL(a.href);
+
+    if(btn){ btn.textContent = '✓ Downloaded'; setTimeout(()=>{ btn.textContent='↓ Export'; btn.disabled=false; },2000); }
+  } catch(e) {
+    console.error('Export error:', e);
+    alert('Export failed: ' + e.message);
+    if(btn){ btn.textContent='↓ Export'; btn.disabled=false; }
+  }
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────
+if(!getKey()) setTimeout(openAPIModal, 800);
+</script>
+</body>
+</html>
